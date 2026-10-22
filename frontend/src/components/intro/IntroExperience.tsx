@@ -30,7 +30,7 @@ export function shouldPlayIntro(): boolean {
   if (param === "0") return false;
   if (param === "1") return true;
   // While the site is being built the intro should be reviewable on every reload.
-  if (import.meta.env.DEV) return true;
+  if (import.meta.env?.DEV) return true;
   try {
     if (window.sessionStorage.getItem(INTRO_SEEN_KEY) === "1") return false;
   } catch {
