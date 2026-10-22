@@ -18,8 +18,15 @@ if [ ! -d node_modules ]; then
   npm install
 fi
 
-MONGO_URI="$MONGO_URI" npm run seed
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@khang.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin123}"
+
+MONGO_URI="$MONGO_URI" \
+ADMIN_EMAIL="$ADMIN_EMAIL" \
+ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+npm run seed
 
 echo ""
 echo "✅ Done!"
-echo "   Admin login: admin@khang.com / admin123"
+echo "   Admin login: $ADMIN_EMAIL"
+echo "   (Change ADMIN_PASSWORD before going live!)"

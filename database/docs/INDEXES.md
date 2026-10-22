@@ -25,7 +25,6 @@ manual / production deployments.
 | `{ slug: 1 }` | unique | URL routing |
 | `{ category: 1 }` | regular | Filter menu by category |
 | `{ featured: 1 }` | regular | Homepage signature picks |
-| `{ name, description, chineseName }` | **text** | Global search (`?q=…`) |
 
 ## Orders
 
@@ -35,6 +34,15 @@ manual / production deployments.
 | `{ user: 1, createdAt: -1 }` | compound | "My Orders" view |
 | `{ status: 1 }` | regular | Admin dashboard filtering |
 | `{ "payment.status": 1 }` | regular | Revenue queries |
+| `{ "customer.email": 1 }` | regular | Look up a customer's orders |
+| `{ createdAt: -1 }` | regular | Newest-first admin list |
+
+## Subscribers
+
+| Index | Type | Purpose |
+|---|---|---|
+| `{ email: 1 }` | unique | Prevent duplicate newsletter signups |
+| `{ active: 1, createdAt: -1 }` | compound | Export active subscribers |
 
 ## Reviews
 
@@ -55,8 +63,9 @@ mongosh "<YOUR_MONGO_URI>"
 
 ## Performance notes
 
-- The **text index** on products supports the `?q=` query parameter in
- `GET /api/products` and powers the global search modal in the frontend.
+- `GET /api/products?q=` uses a case-insensitive regex across name, Chinese
+  name, description and category, so it also matches partial Chinese text and
+  works even before indexes finish building.
 - The **compound `(user, createdAt: -1)`** on orders makes "My Orders"
  a single index scan — no full collection lookup.
 - The **unique `(user, product)`** on reviews enforces the business rule

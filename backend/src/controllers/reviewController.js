@@ -4,7 +4,8 @@ import Product from "../models/Product.js";
 // GET /api/reviews?product=slug — list reviews for a product
 export async function listReviews(req, res, next) {
   try {
-    const { product: slug, limit = 20 } = req.query;
+    const { product: slug } = req.query;
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
     let filter = {};
     if (slug) {
       const product = await Product.findOne({ slug });
@@ -13,7 +14,7 @@ export async function listReviews(req, res, next) {
     }
     const reviews = await Review.find(filter)
       .sort({ createdAt: -1 })
-      .limit(Number(limit))
+      .limit(limit)
       .populate("user", "name");
     res.json({ count: reviews.length, reviews });
   } catch (err) {
@@ -24,7 +25,7 @@ export async function listReviews(req, res, next) {
 // POST /api/reviews — create a review (auth required)
 export async function createReview(req, res, next) {
   try {
-    const { productSlug, rating, text, location } = req.body;
+    const { productSlug, rating, text, location } = req.body || {};
     if (!rating || rating < 1 || rating > 5)
       return res.status(400).json({ message: "Rating must be 1-5" });
     if (!text?.trim())

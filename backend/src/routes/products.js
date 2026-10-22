@@ -5,12 +5,14 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  listCategories,
 } from "../controllers/productController.js";
 import { protect, adminOnly } from "../middleware/auth.js";
 
 const router = Router();
 
 router.get("/", listProducts);
+router.get("/meta/categories", listCategories);
 router.get("/:slug", getProduct);
 router.post("/", protect, adminOnly, createProduct);
 router.put("/:id", protect, adminOnly, updateProduct);

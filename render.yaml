@@ -1,0 +1,64 @@
+# ─────────────────────────────────────────────────────────────
+# Render.com Blueprint — Khang API
+#
+# 1. Push this repository to GitHub
+# 2. Render Dashboard → New → Blueprint → select the repo
+# 3. Fill in the `sync: false` values (Mongo URI, Razorpay, Gmail, CLIENT_URL)
+# 4. Deploy. Render runs `npm ci` in /backend and starts `npm start`.
+# ─────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: khang-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: MONGO_AUTO_INDEX
+        value: "true"
+      - key: ORDER_NOTIFY_EMAIL
+        value: sultham456@gmail.com
+
+      # Set these in the Render dashboard:
+      - key: MONGO_URI
+        sync: false
+      - key: CLIENT_URL
+        sync: false # https://your-frontend.vercel.app
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_SECURE
+        value: "false"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: ADMIN_NAME
+        value: Khang Admin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_RESET_PASSWORD
+        value: "false"

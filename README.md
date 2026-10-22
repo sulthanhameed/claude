@@ -1,6 +1,8 @@
 # 🏮 Khang Chinese Restaurant & Dimsum
 
-> Full-stack food-ordering platform with **React frontend**, **Node.js backend**, **MongoDB database**, and **real Razorpay + Stripe payment integration**.
+> Full-stack food-ordering platform — **React 19 frontend**, **Express REST API**,
+> **MongoDB database**, **Razorpay payments**, and **order emails** to the customer
+> and to **sultham456@gmail.com**.
 
 <div align="center">
 
@@ -8,346 +10,380 @@
 
 **Authentic Chinese flavors, crafted fresh.**
 
-[Frontend](#-frontend) · [Backend](#-backend) · [Database](#-database) · [Payments](#-payment-integration) · [Deploy](#-deployment)
+[Frontend](./frontend) · [Backend](./backend) · [Database](./database) · [Deployment](./DEPLOYMENT.md)
 
 </div>
 
 ---
 
-## 📁 Project Structure
-
-The repository is organised into **three clearly separated folders**:
+## 📁 Three separate folders
 
 ```
 khang/
 │
-├── 🎨 frontend/             # React 19 + Vite + Tailwind v4
-│   └── README.md            # See for full details
-│
-├── ⚙️  backend/             # Node.js + Express + Mongoose
+├── 🎨 frontend/                  # React 19 + TypeScript + Vite + Tailwind v4
 │   ├── src/
-│   │   ├── server.js                  # Express bootstrap
-│   │   ├── config/db.js               # MongoDB connection
-│   │   ├── models/                    # 5 Mongoose schemas
-│   │   │   ├── User.js
-│   │   │   ├── Category.js
-│   │   │   ├── Product.js
-│   │   │   ├── Order.js
-│   │   │   └── Review.js
-│   │   ├── controllers/
-│   │   │   ├── authController.js      # signup, login, profile
-│   │   │   ├── productController.js   # CRUD + search
-│   │   │   ├── orderController.js     # Server-side total calc
-│   │   │   ├── paymentController.js   # ★ Razorpay HMAC + Stripe
-│   │   │   └── reviewController.js
-│   │   ├── routes/                    # 5 route files (REST API)
-│   │   ├── middleware/
-│   │   │   ├── auth.js                # JWT + adminOnly
-│   │   │   └── errorHandler.js
-│   │   ├── utils/                     # JWT, orderId, email, SMS
-│   │   └── scripts/seed.js
-│   ├── Dockerfile
-│   ├── render.yaml                    # 1-click Render deploy
-│   ├── package.json
-│   ├── .env.example
-│   └── README.md                      # Full API reference
-│
-├── 🗄  database/            # Schemas, seeds, indexes, ER diagram
-│   ├── schema/              # JSON Schema for each collection
-│   │   ├── users.schema.json
-│   │   ├── categories.schema.json
-│   │   ├── products.schema.json
-│   │   ├── orders.schema.json
-│   │   └── reviews.schema.json
-│   ├── seed/                # Initial data
-│   │   ├── categories.json  # 5 categories
-│   │   ├── products.json    # 18 dishes (full menu)
-│   │   └── admin-user.json
-│   ├── migrations/
-│   │   └── 001-initial.js   # Creates all indexes
-│   ├── scripts/
-│   │   ├── seed.sh          # Seed via shell
-│   │   └── backup.sh        # mongodump → tar.gz
-│   ├── docs/
-│   │   ├── ER-DIAGRAM.md    # ASCII entity-relationship diagram
-│   │   └── INDEXES.md       # All index definitions
-│   └── README.md
-│
-├── 📦 Root build files     # (Vite frontend lives here for build tooling)
-│   ├── src/                # → mirrored to frontend/src/
+│   │   ├── components/           # 25 UI components
+│   │   ├── context/              # Auth, Cart, Menu (live API)
+│   │   ├── lib/                  # api.ts, payments.ts, razorpay.ts
+│   │   └── data/menu.ts          # offline fallback only
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   └── .env.example
+│   ├── vite.config.ts            # /api proxy → localhost:5000
+│   ├── vercel.json               # Vercel hosting config
+│   ├── .env.example
+│   └── README.md
 │
-├── 🐳 docker-compose.yml    # Full local stack in 1 command
-├── ▲  vercel.json           # Frontend deploy config
-└── 📖 README.md             # ← you are here
+├── ⚙️ backend/                   # Node.js + Express + Mongoose
+│   ├── src/
+│   │   ├── server.js             # Express bootstrap + Razorpay webhook
+│   │   ├── config/db.js
+│   │   ├── models/               # User, Category, Product, Order, Review, Subscriber
+│   │   ├── controllers/          # auth, products, orders, payments, reviews, newsletter
+│   │   ├── routes/
+│   │   ├── middleware/           # JWT auth, admin, error handler
+│   │   ├── utils/                # JWT, order ID, email notifications
+│   │   └── scripts/seed.js
+│   ├── Dockerfile
+│   ├── Procfile                  # Railway / Heroku
+│   ├── package.json
+│   ├── .env.example
+│   └── README.md
+│
+├── 🗄 database/                  # MongoDB design + seeds + docs
+│   ├── schema/                   # JSON Schema per collection
+│   ├── seed/                     # categories, products, admin
+│   ├── migrations/001-initial.js # indexes
+│   ├── scripts/                  # seed.sh, backup.sh
+│   ├── docs/                     # ER diagram, index reference
+│   └── README.md
+│
+├── render.yaml                   # Render Blueprint (backend service)
+├── docker-compose.yml            # Mongo + API + frontend in one command
+├── DEPLOYMENT.md                 # Step-by-step hosting guide
+└── README.md
 ```
+
+There is **no shared root app** — each folder can be deployed independently.
 
 ---
 
-## 🎨 Frontend
+## ✅ Feature checklist
 
-**React 19 · TypeScript · Vite · Tailwind CSS v4**
+| Area | Status |
+|---|---|
+| Restaurant landing page with cinematic animations | ✅ |
+| Live menu loaded from MongoDB (`GET /api/products`) | ✅ |
+| Category filter, price sort, instant search | ✅ |
+| Product detail modal, veg/spice indicators | ✅ |
+| Cart drawer with 5% GST + ₹40 delivery (free over ₹500) | ✅ |
+| Sign up / sign in with JWT | ✅ |
+| **Signup emails stored in MongoDB** (unique, indexed) | ✅ |
+| Session validation against `/auth/me` | ✅ |
+| Checkout requires a real account | ✅ |
+| Server-side price recalculation (no tampering) | ✅ |
+| **Razorpay** — UPI, cards, wallets, netbanking | ✅ |
+| HMAC-SHA256 signature verification | ✅ |
+| Razorpay webhook (`payment.captured` / `failed`) | ✅ |
+| Cash on delivery | ✅ |
+| **Customer receipt email** after confirmation | ✅ |
+| **Owner order email → sultham456@gmail.com** | ✅ |
+| Duplicate-email protection / idempotent retries | ✅ |
+| Live order tracking with 30s refresh | ✅ |
+| Order history (“My Orders”) | ✅ |
+| Admin dashboard — orders, revenue, status updates | ✅ |
+| Refund API (admin) | ✅ |
+| Newsletter signup stored in `subscribers` | ✅ |
+| Reviews from MongoDB (curated fallback) | ✅ |
+| Responsive mobile UI + floating cart | ✅ |
+| Separate hosting configs for frontend / backend / database | ✅ |
 
-A single-page application with:
+### Behaviour when the API is offline
 
-- ✨ **Interactive 5-dish hero swap** — click any dish, it flies to the centre
-- 🎬 **Scroll-triggered animations** — text reveals word-by-word, images fade-zoom in
-- 🍱 **Editorial menu** — category filter, sort, hairline-bordered cards
-- 🛒 **Cart drawer** — auto-calculated subtotal · 5% tax · free delivery > ₹500
-- 💳 **Real payment flow** — Razorpay popup, Stripe support
-- 👤 **Auth system** — Sign in / Sign up with JWT, persisted via `localStorage`
-- 🚚 **Live order tracking** — 4-stage progress with pulsing rings
-- 🔍 **Cmd-K search** — searches name, Chinese name, category, description
-- ⚡ **Admin dashboard** — order management, revenue stats, status updates
+The menu shows a curated fallback list, **checkout is disabled** with a retry
+prompt, and sign-in shows a real error. No fake orders, no fake accounts.
 
-See **[`frontend/README.md`](./frontend/README.md)** for component-level details.
+---
 
-### Quick start (frontend)
+## 🧱 Tech stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript 5.9, Vite 7, Tailwind CSS v4 |
+| State | React Context (Auth, Cart, Menu) |
+| Backend | Node.js 18+, Express 4, Mongoose 8 |
+| Database | MongoDB (Atlas or local Docker) |
+| Auth | JWT (HS256, 7d) + bcrypt (10 rounds) |
+| Payments | Razorpay Checkout JS + Razorpay Node SDK |
+| Email | Nodemailer + Gmail SMTP (App Password) |
+| Security | Helmet, CORS allow-list, express-rate-limit |
+| Hosting | Vercel (frontend), Render (API), MongoDB Atlas |
+
+---
+
+## 🚀 Quick start (local)
+
+### 1. Database
 
 ```bash
-npm install
-npm run dev          # → http://localhost:5173
-npm run build        # → produces single-file dist/index.html (~100 KB gzipped)
+# Option A — Docker
+docker run -d --name khang-mongo -p 27017:27017 -v khang-data:/data/db mongo:7
+
+# Option B — MongoDB Atlas free M0 cluster
+# https://www.mongodb.com/atlas
 ```
 
----
-
-## ⚙️ Backend
-
-**Node.js (ES Modules) · Express 4 · Mongoose 8**
-
-REST API with **24 endpoints** across auth, products, orders, payments, and reviews.
-
-### Endpoints
-
-| Group | Path | Method | Auth |
-|---|---|---|---|
-| **Auth** | `/api/auth/signup` `/login` `/me` `/logout` | various | JWT |
-| **Products** | `/api/products` `/api/products/:slug` | GET (public), POST/PUT/DELETE (admin) | — / admin |
-| **Orders** | `/api/orders` `/api/orders/me` `/api/orders/:id` `/api/orders/track/:id` | various | JWT / public tracking |
-| **Payments** | `/api/payments/razorpay/create-order` `/verify` `/stripe/create-intent` `/stripe/webhook` `/refund` | POST | JWT / admin |
-| **Reviews** | `/api/reviews` | GET / POST / DELETE | JWT |
-
-See **[`backend/README.md`](./backend/README.md)** for the full endpoint reference.
-
-### Quick start (backend)
+### 2. Backend
 
 ```bash
 cd backend
-cp .env.example .env       # add MONGO_URI + payment keys
+cp .env.example .env         # MONGO_URI, JWT_SECRET, Razorpay, Gmail
 npm install
-npm run seed               # populate menu + create admin user
-npm run dev                # → http://localhost:5000
+npm run seed                 # 5 categories + 17 dishes + admin
+npm run dev                  # http://localhost:5000
 ```
 
-### Tech
+### 3. Frontend
 
-- **Express 4** — REST API
-- **Mongoose 8** — MongoDB ODM
-- **bcryptjs** — password hashing (10 rounds)
-- **jsonwebtoken** — JWT auth (HS256, 7d expiry)
-- **Razorpay SDK + Stripe SDK** — real payment integration
-- **Nodemailer + Twilio** — email & SMS confirmations
-- **Helmet · CORS · express-rate-limit · Morgan** — security & logging
+```bash
+cd frontend
+cp .env.example .env         # VITE_API_URL=/api
+npm install
+npm run dev                  # http://localhost:5173
+```
+
+Open **http://localhost:5173**.
+
+- Admin: `admin@khang.com` / `admin123` (change this!)
+- Signup with any email → stored in the `users` collection
+- Add dishes → checkout → sign in → pay with Razorpay test card
+  `4111 1111 1111 1111`, OTP `1234`
+
+### One-command Docker stack
+
+```bash
+docker compose up --build
+# frontend :5173 · API :5000 · MongoDB :27017
+```
+
+---
+
+## 🔧 Environment variables
+
+### Frontend (`frontend/.env`)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_API_URL` | `/api` | Backend base URL (Vite proxy in dev) |
+| `VITE_PROXY_TARGET` | `http://localhost:5000` | Dev proxy target |
+
+Production: `VITE_API_URL=https://<render-api>.onrender.com/api`
+
+### Backend (`backend/.env`)
+
+See [`backend/.env.example`](./backend/.env.example). Minimal set:
+
+```env
+MONGO_URI=...
+JWT_SECRET=...
+CLIENT_URL=http://localhost:5173
+
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=sultham456@gmail.com
+EMAIL_PASS=<gmail app password>
+EMAIL_FROM="Khang Restaurant <sultham456@gmail.com>"
+ORDER_NOTIFY_EMAIL=sultham456@gmail.com
+
+ADMIN_EMAIL=admin@khang.com
+ADMIN_PASSWORD=<strong password>
+```
+
+Full table: [`backend/README.md`](./backend/README.md#-environment-variables).
+
+---
+
+## 💳 Razorpay integration
+
+```
+1. User signs in and clicks "Pay ₹X Securely"
+2. POST /api/orders                          → pending order KH-2026-XXXX
+3. POST /api/payments/razorpay/create-order  → Razorpay order (paise)
+4. Razorpay Checkout popup (UPI / card / wallet / netbanking)
+5. POST /api/payments/razorpay/verify        → HMAC-SHA256 checked
+6. Order marked paid → customer receipt + owner alert emailed
+7. Admin sees the PAID order in the dashboard
+```
+
+### Keys
+
+1. [Razorpay Dashboard](https://dashboard.razorpay.com) → **API Keys** → Generate **Test Key**
+2. Add `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET`
+3. Webhook (recommended):
+   - URL `https://<api>/api/payments/razorpay/webhook`
+   - Events `payment.captured`, `payment.failed`
+   - Secret → `RAZORPAY_WEBHOOK_SECRET`
+4. Test card `4111 1111 1111 1111` · CVV `123` · OTP `1234`
+
+### Security
+
+- HMAC signature verified server-side with `timingSafeEqual`
+- Payment must belong to the logged-in user and the stored Razorpay order id
+- Amounts always recalculated from MongoDB prices
+- Idempotent verify + webhook (safe retries)
+- Full refunds available to admins (`POST /api/payments/refund`)
+
+---
+
+## 📧 Order confirmation emails
+
+Every **confirmed** order (COD immediately, online after verification) sends:
+
+| Recipient | Content |
+|---|---|
+| Customer (`users.email`) | Receipt: order id, items, totals, delivery address |
+| **`sultham456@gmail.com`** (`ORDER_NOTIFY_EMAIL`) | New-order alert with customer contact + full order |
+
+- Gmail App Password required (not your normal password)
+- Customer signup emails are stored in MongoDB and reused for receipts
+- Email delivery flags on each order prevent duplicates
+- If email is not configured, checkout still works; `/health` reports `emailConfigured: false`
+
+Gmail setup: [`DEPLOYMENT.md`](./DEPLOYMENT.md#-step-5--order-emails-gmail).
 
 ---
 
 ## 🗄 Database
 
-**MongoDB** (local via Docker, or hosted on MongoDB Atlas)
+Five core collections + newsletter:
 
-Five collections (`users`, `categories`, `products`, `orders`, `reviews`)
-with full JSON Schema documentation, seed data, indexes, and ER diagram in
-**[`database/`](./database/README.md)**.
-
-### Quick start (database)
-
-```bash
-# Option 1: Local Mongo via Docker
-docker run -d --name khang-mongo -p 27017:27017 mongo:7
-
-# Option 2: MongoDB Atlas — get free M0 cluster at mongodb.com/atlas
-
-# Then seed:
-./database/scripts/seed.sh "mongodb://localhost:27017/khang"
-```
-
-### Seed data
-
-- **5 categories**: Dim Sum · Noodles & Soups · Rice & Curry · Snacks · Drinks
-- **18 products** (full Khang menu with prices, ratings, Chinese names, ingredients)
-- **1 admin user**: `admin@khang.com` / `admin123`
-
-See **[`database/docs/ER-DIAGRAM.md`](./database/docs/ER-DIAGRAM.md)** for
-the full entity-relationship diagram and **[`database/docs/INDEXES.md`](./database/docs/INDEXES.md)**
-for the complete index definitions.
-
----
-
-## 💳 Payment Integration
-
-**Real payment gateways** — not simulated.
-
-### Supported methods
-
-| Method | Gateway | Use Case |
+| Collection | Purpose | Key indexes |
 |---|---|---|
-| 📱 **UPI** | Razorpay | GPay, PhonePe, Paytm, BHIM |
-| 💳 **Cards** | Razorpay / Stripe | Visa, Mastercard, RuPay, Amex |
-| 👛 **Wallets** | Razorpay | Paytm, Mobikwik, Freecharge |
-| 💵 **COD** | — | Cash on Delivery |
+| `users` | Customers + admins, emails, hashed passwords | `email` unique |
+| `categories` | 5 menu categories | `slug` unique, `sortOrder` |
+| `products` | 17 dishes | `slug` unique, `category`, `featured` |
+| `orders` | Orders, Razorpay ids, tracking, email flags | `orderId` unique, `user`, `status`, `payment.status` |
+| `reviews` | Ratings/text per product/user | `(user, product)` unique |
+| `subscribers` | Newsletter emails | `email` unique |
 
-### End-to-end flow (Razorpay example)
+See [`database/README.md`](./database/README.md) for schemas, seed data,
+ER diagram and index reference.
 
-```
-1. User clicks "Pay ₹450 Securely →" in Checkout modal
-2. Frontend → POST /api/orders  (creates pending order, recalculates totals server-side)
-3. Frontend → POST /api/payments/razorpay/create-order
-   ← backend returns { razorpayOrderId, amount, key, customer }
-4. Frontend loads https://checkout.razorpay.com/v1/checkout.js
-5. Razorpay popup opens (pre-filled with customer info, themed green)
-6. User pays with test card 4111 1111 1111 1111 (OTP: 1234)
-7. Razorpay returns { razorpay_payment_id, signature } to handler
-8. Frontend → POST /api/payments/razorpay/verify
-9. Backend recomputes HMAC-SHA256 of (order_id|payment_id), compares signature
-10. ✅ Order marked "paid" → email + SMS dispatched
-11. Frontend shows success screen with Order ID
-12. Admin sees the order in dashboard with "PAID" badge
-```
-
-### Razorpay setup
-
-1. Sign up at [razorpay.com](https://razorpay.com) (free)
-2. Dashboard → **API Keys → Generate Test Key**
-3. Add to `backend/.env`:
- ```env
- RAZORPAY_KEY_ID=rzp_test_xxx
- RAZORPAY_KEY_SECRET=your_secret
- ```
-4. Test card: `4111 1111 1111 1111` · any future expiry · CVV `123` · OTP `1234`
-
-### Stripe setup
-
-1. Sign up at [stripe.com](https://stripe.com)
-2. Dashboard → **Developers → API Keys**
-3. Add to `backend/.env`:
- ```env
- STRIPE_SECRET_KEY=sk_test_xxx
- STRIPE_PUBLISHABLE_KEY=pk_test_xxx
- ```
-4. For local webhook testing:
- ```bash
- stripe listen --forward-to localhost:5000/api/payments/stripe/webhook
- ```
- Copy the printed `whsec_xxx` into `STRIPE_WEBHOOK_SECRET`
-5. Test card: `4242 4242 4242 4242`
-
-### Security
-
-- **HMAC-SHA256 signature verification** on every Razorpay payment (server-side)
-- **Stripe webhook signatures** verified via `stripe.webhooks.constructEvent`
-- **Server-side total recalculation** — never trusts client-sent prices
-- **Idempotent** — duplicate webhook events are safe to receive
-- **Refund support** — admin can refund any paid order via `POST /api/payments/refund`
-
----
-
-## 🚀 Quick Start (Full Stack)
-
-### Prerequisites
-
-- Node.js 18+
-- Docker (or MongoDB Atlas)
-- Razorpay or Stripe test account (optional — site works in offline demo mode without)
-
-### One-command full stack with Docker
+### Seed
 
 ```bash
-# (Optional) Create backend/.env with your payment keys first
-docker compose up
-
-# In another terminal:
-npm install
-npm run dev          # → http://localhost:5173
-```
-
-That spins up:
-- MongoDB on `:27017`
-- Backend API on `:5000` (auto-seeded with menu + admin user)
-- Frontend on `:5173`
-
-### Manual setup
-
-```bash
-# Terminal 1 — Database (or use Atlas)
-docker run -d --name khang-mongo -p 27017:27017 mongo:7
-
-# Terminal 2 — Backend
 cd backend
-cp .env.example .env       # fill in MONGO_URI + payment keys
-npm install
-npm run seed
-npm run dev
-
-# Terminal 3 — Frontend
-cp .env.example .env       # adjust VITE_API_URL if needed
-npm install
-npm run dev
+npm run seed                    # safe upsert
+npm run seed:force              # reset menu and reseed
 ```
 
-Open `http://localhost:5173`. Sign in with `admin@khang.com` / `admin123`
-to see the admin dashboard.
+Admin credentials come from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (default
+`admin@khang.com` / `admin123`).
 
 ---
 
-## 🌐 Deployment
+## 📚 API summary
 
-| Layer | Platform | Config |
-|---|---|---|
-| **Frontend** | Vercel / Netlify / GitHub Pages | `vercel.json` (built-in) |
-| **Backend** | Render / Railway / Fly.io / Heroku | `backend/render.yaml` (1-click) |
-| **Database** | MongoDB Atlas (free M0 tier) | — |
+Base: `/api`
 
-### Frontend → Vercel
+| Group | Endpoints |
+|---|---|
+| Auth | `POST /auth/signup`, `POST /auth/login`, `GET/PUT /auth/me` |
+| Products | `GET /products`, `GET /products/meta/categories`, `GET /products/:slug`, admin CRUD |
+| Orders | `POST /orders`, `GET /orders/me`, `GET /orders/:orderId`, `GET /orders/track/:orderId`, admin list/status |
+| Payments | `POST /payments/razorpay/create-order`, `/verify`, `/webhook`, `POST /payments/refund` |
+| Reviews | `GET /reviews`, `POST /reviews`, `DELETE /reviews/:id` |
+| Newsletter | `POST /newsletter`, admin list/unsubscribe |
+| Ops | `GET /health`, `GET /api` |
+
+Full contract with request bodies: [`backend/README.md`](./backend/README.md#-rest-api).
+
+---
+
+## 🌐 Deployment (separate hosts)
+
+| Part | Host | Root directory | Config |
+|---|---|---|---|
+| Frontend | **Vercel** | `frontend` | `frontend/vercel.json` |
+| Backend | **Render** | `backend` | `render.yaml` |
+| Database | **MongoDB Atlas** | — | `database/` |
+
+**Step-by-step guide:** [`DEPLOYMENT.md`](./DEPLOYMENT.md)
+
+Short version:
 
 ```bash
-vercel --prod        # auto-detects Vite config
+# 1. Seed Atlas
+cd backend
+MONGO_URI="mongodb+srv://..." ADMIN_EMAIL="you@example.com" \
+  ADMIN_PASSWORD="strong-password" npm run seed
+
+# 2. Render: root=backend, build=npm ci, start=npm start
+#    env: MONGO_URI, JWT_SECRET, CLIENT_URL, RAZORPAY_*, EMAIL_*
+
+# 3. Vercel: root=frontend, env VITE_API_URL=https://<api>/api
+
+# 4. Render: set CLIENT_URL=https://<frontend-domain>, redeploy
 ```
 
-Set env var `VITE_API_URL` to your deployed backend URL.
+Hosting files included:
 
-### Backend → Render
-
-1. Push to GitHub
-2. Render dashboard → **New → Blueprint** → select repo
-3. Fill in env vars (`MONGO_URI`, `RAZORPAY_*`, `STRIPE_*`)
-4. Auto-deploys on every push
-
-### Database → MongoDB Atlas
-
-1. Create a free M0 cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Network Access → Allow from anywhere (`0.0.0.0/0`)
-3. Copy connection string → `MONGO_URI` env var
-4. Seed: `./database/scripts/seed.sh "<your-atlas-uri>"`
+- `frontend/vercel.json`
+- `render.yaml` (Render Blueprint, root of repo)
+- `backend/Dockerfile` + `.dockerignore`
+- `backend/Procfile`
+- `docker-compose.yml`
 
 ---
 
-## 🔒 Security Summary
+## 🔒 Security summary
 
-- Passwords hashed with **bcrypt** (10 rounds)
-- JWT signed with **HS256**, 7-day expiry, stored client-side
-- **Razorpay HMAC-SHA256 signature** verified server-side on every payment
-- **Stripe webhook signatures** verified via `constructEvent`
-- **Server-side total recalculation** prevents price tampering
-- **Helmet** sets sane HTTP security headers
-- **CORS** restricted to `CLIENT_URL`
-- **Rate limit** of 300 req / 15min per IP
-- **Sensitive fields** stripped from JSON responses (`password`)
-- **Role-based access** (`user` / `admin`) on protected routes
+- bcrypt password hashing, passwords never serialised
+- JWT HS256 with 7-day expiry, role-based access (`user` / `admin`)
+- Razorpay HMAC signature verification (timing-safe)
+- Server-side totals; quantities capped; only valid ObjectIds accepted
+- CORS allow-list via `CLIENT_URL`
+- Helmet headers + request body limits
+- Rate limiting on all APIs, stricter on auth
+- Owner/admin checks on order reads and management
+- HTML escaping in transactional emails
+- Secrets only in environment variables (`.env` git-ignored)
+
+---
+
+## 🧪 Testing checklist
+
+- [ ] Menu loads live products (not the offline fallback)
+- [ ] Signup stores the email; duplicate email returns 409
+- [ ] Sign-in fails with a real error for wrong credentials
+- [ ] Cart sends MongoDB `_id`s in `POST /orders`
+- [ ] Razorpay test payment → order `paid`
+- [ ] Order email arrives at `sultham456@gmail.com`
+- [ ] Tracking shows the real status
+- [ ] Admin can advance order status
+- [ ] Newsletter email appears in `subscribers`
+- [ ] Mobile layout + search + cart work
+
+---
+
+## 🆘 Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Menu shows fallback / checkout disabled | API unreachable — check `VITE_API_URL`, `/health`, and `npm run seed` |
+| CORS error | Add the exact frontend origin to `CLIENT_URL` on Render |
+| `Razorpay is not configured` | Add both keys and redeploy |
+| No order email | Gmail App Password missing/invalid; check spam |
+| Emails not going to the owner | Set `ORDER_NOTIFY_EMAIL=sultham456@gmail.com` |
+| `MongoDB connection failed` | Atlas IP allow-list + URI password |
+| 401 after refresh | Token expired; sign in again |
+| Admin dashboard 403 | Account role isn't `admin`; reseed or update the user |
+
+More: [`DEPLOYMENT.md`](./DEPLOYMENT.md#-troubleshooting).
 
 ---
 
@@ -357,10 +393,10 @@ MIT — free to use as a starting point for your own restaurant.
 
 ## 🙏 Credits
 
-- **Imagery & video** — [Pexels](https://www.pexels.com)
-- **Fonts** — [Google Fonts](https://fonts.google.com): Playfair Display, Outfit, Manrope, Space Grotesk, Ma Shan Zheng
-- **Payments** — [Razorpay](https://razorpay.com) · [Stripe](https://stripe.com)
-- **Inspired by** Khang Restaurant ([@khang.resto](https://www.instagram.com/khang.resto))
+- Imagery & video — [Pexels](https://www.pexels.com)
+- Fonts — [Google Fonts](https://fonts.google.com): Playfair Display, Outfit, Manrope, Space Grotesk, Ma Shan Zheng
+- Payments — [Razorpay](https://razorpay.com)
+- Inspired by Khang Restaurant ([@khang.resto](https://www.instagram.com/khang.resto))
 
 ---
 

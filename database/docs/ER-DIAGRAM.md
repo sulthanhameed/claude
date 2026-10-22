@@ -37,14 +37,17 @@
 │ total                Number                                  │
 │ payment              {                                       │
 │   method             "upi"│"card"│"wallet"│"cod"             │
-│   gateway            "razorpay"│"stripe"│"cod"               │
+│   gateway            "razorpay"│"cod"│"none"                 │
 │   status             "pending"│"paid"│"failed"│"refunded"    │
 │   razorpayOrderId    String                                  │
 │   razorpayPaymentId  String                                  │
 │   razorpaySignature  String     (HMAC verified)              │
-│   stripePaymentIntentId  String                              │
 │   paidAt             Date                                    │
+│   refundId           String                                  │
+│   refundedAt         Date                                    │
 │ }                                                            │
+│ notifications        { customerEmailSentAt,                  │
+│                        ownerEmailSentAt }                    │
 │ status               "received"│"preparing"│                 │
 │                      "out_for_delivery"│"delivered"          │
 │ tracking             { stage, note, at }[]                   │
@@ -91,6 +94,17 @@
                                            │ Unique:          │
                                            │ (user, product)  │
                                            └──────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│                       SUBSCRIBERS                            │
+├──────────────────────────────────────────────────────────────┤
+│ _id              ObjectId                       (PK)         │
+│ email            String      uniq, lowercase                 │
+│ source           String      "footer"                        │
+│ active           Boolean                                     │
+│ subscribedAt     Date                                        │
+│ unsubscribedAt   Date                                        │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ## Cardinality
@@ -102,6 +116,7 @@
 | Category → Products | 1 : M | Denormalised by name string |
 | User → Reviews | 1 : M | One per product max |
 | Product → Reviews | 1 : M | Aggregated into `rating` + `reviewsCount` |
+| Subscribers | standalone | Newsletter emails, unique per address |
 
 ## Denormalisation choices
 

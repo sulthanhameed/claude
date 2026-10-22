@@ -22,6 +22,5 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-productSchema.index({ name: "text", description: "text", chineseName: "text" });
 
 export default mongoose.model("Product", productSchema);

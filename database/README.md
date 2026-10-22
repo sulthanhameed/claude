@@ -12,10 +12,11 @@ database/
 │   ├── categories.schema.json
 │   ├── products.schema.json
 │   ├── orders.schema.json
-│   └── reviews.schema.json
+│   ├── reviews.schema.json
+│   └── subscribers.schema.json
 ├── seed/                    # Initial data
 │   ├── categories.json      # 5 categories
-│   ├── products.json        # 18 dishes
+│   ├── products.json        # 17 dishes
 │   └── admin-user.json      # admin@khang.com / admin123
 ├── migrations/              # Versioned schema updates
 │   └── 001-initial.js       # Creates indexes
@@ -42,10 +43,13 @@ docker run -d --name khang-mongo -p 27017:27017 -v khang-data:/data/db mongo:7
 
 ### Seed the database
 ```bash
-# from the repo root
 cd backend
-npm run seed          # uses ../database/seed/*.json
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD="strong-password" npm run seed
 ```
+
+The canonical data also lives in `database/seed/*.json` for reference and
+import tooling. The backend keeps an inline copy because it is deployed as a
+standalone folder on Render.
 
 ## 🗺️ Entity Relationships
 
@@ -58,6 +62,8 @@ npm run seed          # uses ../database/seed/*.json
      │
      └────────►  Reviews ────►  Products
                               ◄──── Categories (via category name)
+
+Subscribers (newsletter) is an independent collection keyed by unique email.
 ```
 
 See `docs/ER-DIAGRAM.md` for full details.
@@ -68,9 +74,10 @@ See `docs/ER-DIAGRAM.md` for full details.
 |---|---|---|
 | `users` | 1 (admin) | `email` (unique) |
 | `categories` | 5 | `slug` (unique), `sortOrder` |
-| `products` | 18 | `slug` (unique), text index on name/description, `featured` |
+| `products` | 17 | `slug` (unique), `category`, `featured` |
 | `orders` | 0 | `orderId` (unique), `user`, `status`, `payment.status` |
 | `reviews` | 0 | `(user, product)` unique compound, `product` |
+| `subscribers` | 0 | `email` (unique) |
 
 ## 🔧 Used by
 

@@ -50,33 +50,71 @@ const PRODUCTS = [
 
 async function seed() {
   await connectDB();
-  console.log("🌱 Seeding database…");
+  console.log("🌱 Seeding Khang database…");
 
-  await Promise.all([
-    Category.deleteMany({}),
-    Product.deleteMany({}),
-  ]);
+  const force = process.argv.includes("--force");
 
-  await Category.insertMany(CATEGORIES);
-  console.log(`✓ Inserted ${CATEGORIES.length} categories`);
-
-  await Product.insertMany(PRODUCTS);
-  console.log(`✓ Inserted ${PRODUCTS.length} products`);
-
-  // Create admin user (if not exists)
-  const adminEmail = "admin@khang.com";
-  const exists = await User.findOne({ email: adminEmail });
-  if (!exists) {
-    await User.create({
-      name: "Admin",
-      email: adminEmail,
-      password: "admin123",
-      role: "admin",
-    });
-    console.log(`✓ Admin created: ${adminEmail} / admin123`);
+  if (force) {
+    console.log("⚠  --force supplied: clearing products and categories");
+    await Promise.all([Category.deleteMany({}), Product.deleteMany({})]);
   }
 
-  console.log("🎉 Done!");
+  // Upsert by slug so re-running the seed never breaks existing orders.
+  for (const category of CATEGORIES) {
+    await Category.updateOne(
+      { slug: category.slug },
+      { $set: category },
+      { upsert: true },
+    );
+  }
+  console.log(`✓ ${CATEGORIES.length} categories ready`);
+
+  for (const product of PRODUCTS) {
+    await Product.updateOne(
+      { slug: product.slug },
+      { $set: product },
+      { upsert: true },
+    );
+  }
+  console.log(`✓ ${PRODUCTS.length} products ready`);
+
+  // Admin account — override with env vars before the first seed.
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@khang.com")
+    .trim()
+    .toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminName = process.env.ADMIN_NAME || "Khang Admin";
+
+  const existingAdmin = await User.findOne({ email: adminEmail });
+  if (!existingAdmin) {
+    await User.create({
+      name: adminName,
+      email: adminEmail,
+      password: adminPassword,
+      role: "admin",
+    });
+    console.log(`✓ Admin created: ${adminEmail}`);
+    if (adminPassword === "admin123") {
+      console.warn(
+        "⚠  Using the default password. Change ADMIN_PASSWORD before going live!",
+      );
+    }
+  } else {
+    let changed = false;
+    if (existingAdmin.role !== "admin") {
+      existingAdmin.role = "admin";
+      changed = true;
+    }
+    if (String(process.env.ADMIN_RESET_PASSWORD).toLowerCase() === "true") {
+      existingAdmin.password = adminPassword;
+      changed = true;
+      console.log("✓ Admin password reset from ADMIN_PASSWORD");
+    }
+    if (changed) await existingAdmin.save();
+    console.log(`✓ Admin already exists: ${adminEmail}`);
+  }
+
+  console.log("🎉 Seed complete");
   await mongoose.connection.close();
   process.exit(0);
 }

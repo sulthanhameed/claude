@@ -1,15 +1,25 @@
 {
   "name": "khang-backend",
   "version": "1.0.0",
-  "description": "Backend API for Khang Chinese Restaurant & Dimsum — Express + MongoDB + Razorpay/Stripe",
+  "description": "Express + MongoDB API for Khang Chinese Restaurant — Razorpay payments and email order notifications",
   "type": "module",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node src/scripts/seed.js"
+    "seed": "node src/scripts/seed.js",
+    "seed:force": "node src/scripts/seed.js --force"
   },
-  "keywords": ["express", "mongodb", "restaurant", "razorpay", "stripe"],
+  "keywords": [
+    "express",
+    "mongodb",
+    "restaurant",
+    "razorpay",
+    "rest-api"
+  ],
   "author": "Khang",
   "license": "MIT",
   "dependencies": {
@@ -23,10 +33,7 @@
     "mongoose": "^8.8.0",
     "morgan": "^1.10.0",
     "nodemailer": "^6.9.16",
-    "razorpay": "^2.9.5",
-    "stripe": "^17.3.1",
-    "twilio": "^5.3.4",
-    "zod": "^3.23.8"
+    "razorpay": "^2.9.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

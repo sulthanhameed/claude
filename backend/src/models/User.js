@@ -19,11 +19,12 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
       index: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, "Enter a valid email address"],
     },
     phone: { type: String, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
@@ -31,6 +32,7 @@ const userSchema = new mongoose.Schema(
     addresses: [addressSchema],
     favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     avatarUrl: String,
+    lastLoginAt: Date,
   },
   { timestamps: true },
 );

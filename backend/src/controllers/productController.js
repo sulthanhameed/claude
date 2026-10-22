@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
+import Category from "../models/Category.js";
 
 // GET /api/products?category=&q=&featured=&sort=
 export async function listProducts(req, res, next) {
@@ -8,7 +9,20 @@ export async function listProducts(req, res, next) {
     const filter = {};
     if (category && category !== "All") filter.category = category;
     if (featured === "true") filter.featured = true;
-    if (q) filter.$text = { $search: q };
+    if (q) {
+      // Escape regex metacharacters without relying on a fragile literal.
+      let safe = "";
+      for (const ch of String(q)) {
+        safe += "\\^$.*+?()[]{}|".includes(ch) ? `\\${ch}` : ch;
+      }
+      const rx = new RegExp(safe, "i");
+      filter.$or = [
+        { name: rx },
+        { chineseName: rx },
+        { description: rx },
+        { category: rx },
+      ];
+    }
 
     let cursor = Product.find(filter);
     if (sort === "popular") cursor = cursor.sort({ rating: -1, reviewsCount: -1 });
@@ -69,6 +83,16 @@ export async function deleteProduct(req, res, next) {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
     res.json({ message: "Product deleted" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// GET /api/products/meta/categories — public
+export async function listCategories(_req, res, next) {
+  try {
+    const categories = await Category.find().sort({ sortOrder: 1 }).lean();
+    res.json({ count: categories.length, categories });
   } catch (err) {
     next(err);
   }

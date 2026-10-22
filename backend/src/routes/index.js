@@ -4,6 +4,7 @@ import products from "./products.js";
 import orders from "./orders.js";
 import payments from "./payments.js";
 import reviews from "./reviews.js";
+import newsletter from "./newsletter.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.get("/", (_req, res) =>
       orders: "/api/orders",
       payments: "/api/payments",
       reviews: "/api/reviews",
+      newsletter: "/api/newsletter",
     },
   }),
 );
@@ -26,5 +28,6 @@ router.use("/products", products);
 router.use("/orders", orders);
 router.use("/payments", payments);
 router.use("/reviews", reviews);
+router.use("/newsletter", newsletter);
 
 export default router;
