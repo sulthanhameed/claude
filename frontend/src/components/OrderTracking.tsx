@@ -31,7 +31,13 @@ interface TrackedOrder {
 
 export default function OrderTracking() {
   const [orderId, setOrderId] = useState(
-    () => localStorage.getItem("khang_last_order") || "",
+    () => {
+      try {
+        return localStorage.getItem("khang_last_order") || "";
+      } catch {
+        return "";
+      }
+    },
   );
   const [order, setOrder] = useState<TrackedOrder | null>(null);
   const [loading, setLoading] = useState(false);

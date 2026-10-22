@@ -21,6 +21,7 @@ import AuthModal from "./components/AuthModal";
 import AdminDashboard from "./components/AdminDashboard";
 import MyOrdersModal from "./components/MyOrdersModal";
 import ScrollProgressBar from "./components/ScrollProgressBar";
+import IntroExperience, { shouldPlayIntro } from "./components/intro/IntroExperience";
 import { CartIcon } from "./components/Icons";
 
 function FloatingCartButton() {
@@ -81,13 +82,22 @@ function Shell() {
 }
 
 export default function App() {
+  // Plays once per browser session; `?intro=1` replays it, `?intro=0` skips it.
+  const [introActive, setIntroActive] = useState(() => shouldPlayIntro());
+
   return (
-    <AuthProvider>
-      <MenuProvider>
-        <CartProvider>
-          <Shell />
-        </CartProvider>
-      </MenuProvider>
-    </AuthProvider>
+    <>
+      <div inert={introActive ? true : undefined}>
+        <AuthProvider>
+          <MenuProvider>
+            <CartProvider>
+              <Shell />
+            </CartProvider>
+          </MenuProvider>
+        </AuthProvider>
+      </div>
+
+      {introActive && <IntroExperience onDone={() => setIntroActive(false)} />}
+    </>
   );
 }
