@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import IntroBrandTitle from "./IntroBrandTitle";
 import IntroScene from "./IntroScene";
-import { BRAND_START } from "./introBrand";
 import {
-  INTRO_DURATION,
-  INTRO_SEEN_KEY,
-  beatAt,
-  frameAt,
-  type IntroFrame,
-} from "./introTimeline";
+  BRAND_DURATION,
+  BRAND_START,
+  INTRO_TOTAL,
+  SCENE_END,
+  SCENE_FADE,
+} from "./introBrand";
+import { INTRO_SEEN_KEY, frameAt, smoothstep, type IntroFrame } from "./introTimeline";
 
 export function shouldPlayIntro(): boolean {
   if (typeof window === "undefined") return false;
@@ -50,23 +50,23 @@ export default function IntroExperience({ onDone }: Props) {
     if (typeof window === "undefined" || !window.matchMedia) return false;
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
   });
-  // Reduced motion holds the finished still: the drawing settled and the brand
-  // clip already played out (its last frame is still on screen at 5.7 s).
-  const HOLD_AT = INTRO_DURATION - 700;
-  const [ms, setMs] = useState(() => (reduced ? HOLD_AT : 0));
-  const [beat, setBeat] = useState(() => beatAt(reduced ? HOLD_AT : 0));
+  // Reduced motion opens on the finished still: the clip's last frame, the
+  // name and logo sitting complete on white.
+  const [ms, setMs] = useState(() => (reduced ? INTRO_TOTAL : 0));
+  const [beat, setBeat] = useState<"eat" | "out">(reduced ? "out" : "eat");
   const [leaving, setLeaving] = useState(false);
   const beatRef = useRef(beat);
   const doneRef = useRef(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const frame: IntroFrame = useMemo(() => frameAt(ms), [ms]);
+  const frame: IntroFrame = useMemo(() => frameAt(Math.min(ms, SCENE_END)), [ms]);
 
   const viewBox = portrait ? "250 0 500 604" : "0 0 1000 600";
 
-  // The clip is a separate video; the entrance appends it by handing it elapsed
-  // time, once the meal has played out. It also plays alone at /brand.
-  const brandMs = Math.max(0, ms - BRAND_START);
+  // Two clips, one after the other: the meal plays, the drawing dissolves, and
+  // then the name-and-logo clip — the one /brand plays alone — has the stage.
+  const brandMs = Math.min(BRAND_DURATION, Math.max(0, ms - BRAND_START));
+  const sceneOpacity = 1 - smoothstep(ms, SCENE_END, SCENE_END + SCENE_FADE);
 
   const finish = useCallback(() => {
     if (doneRef.current) return;
@@ -137,14 +137,14 @@ export default function IntroExperience({ onDone }: Props) {
     const tick = (now: number) => {
       if (!start) start = now;
       const elapsed = now - start;
-      const capped = Math.min(INTRO_DURATION, elapsed);
+      const capped = Math.min(INTRO_TOTAL, elapsed);
       setMs(capped);
-      const nextBeat = beatAt(capped);
+      const nextBeat = capped < BRAND_START ? "eat" : "out";
       if (nextBeat !== beatRef.current) {
         beatRef.current = nextBeat;
         setBeat(nextBeat);
       }
-      if (capped < INTRO_DURATION) {
+      if (capped < INTRO_TOTAL) {
         handle = raf(tick);
       } else {
         finish();
@@ -154,27 +154,26 @@ export default function IntroExperience({ onDone }: Props) {
     return () => caf(handle);
   }, [finish, reduced]);
 
-  const exit = reduced && beat !== "out" ? 0 : frame.exit;
-
   return (
     <div
       className="intro-root"
       data-beat={beat}
       data-reduced={reduced ? "true" : "false"}
       style={{
-        opacity: leaving ? 0 : 1 - exit,
+        opacity: leaving ? 0 : 1,
         transition: leaving ? "opacity 440ms ease" : undefined,
         background: "#ffffff",
-        pointerEvents: exit > 0.95 || leaving ? "none" : "auto",
+        pointerEvents: leaving ? "none" : "auto",
       }}
       role="dialog"
       aria-modal="true"
       aria-label="Khang introduction"
     >
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
-        <IntroScene frame={frame} viewBox={viewBox} />
-        {/* then the restaurant's name and logo, on the same white stage */}
-        <IntroBrandTitle ms={brandMs} viewBox={viewBox} fade={1 - exit} />
+        {/* the meal, and then its dissolve to white */}
+        <IntroScene frame={frame} viewBox={viewBox} opacity={sceneOpacity} />
+        {/* the name and logo, as the next clip on the same white stage */}
+        <IntroBrandTitle ms={brandMs} viewBox={viewBox} align="center" />
       </div>
     </div>
   );

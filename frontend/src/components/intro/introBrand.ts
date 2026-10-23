@@ -8,9 +8,24 @@
 /** How long the clip runs, from first frame to the held last frame. */
 export const BRAND_DURATION = 2600;
 
-/** Where the clip joins the entrance, in entrance milliseconds — the moment
- *  the meal settles and the drawing leaves the frame to the name and logo. */
-export const BRAND_START = 3800;
+/* ── how the entrance runs the two clips ─────────────────────────────────
+   The meal plays first and leaves the stage; the name-and-logo clip follows it
+   on the same white stage, as a clip of its own rather than an overlay. */
+
+/** The meal's last beat: the drawing leaves the stage here. */
+export const SCENE_END = 5250;
+
+/** How long the drawing takes to dissolve to white. */
+export const SCENE_FADE = 450;
+
+/** Where the name-and-logo clip takes over, in entrance milliseconds. */
+export const BRAND_START = SCENE_END + SCENE_FADE;
+
+/** How long the finished lockup is held before the page comes in. */
+export const BRAND_HOLD = 550;
+
+/** How long the entrance runs, first frame to hand-off. */
+export const INTRO_TOTAL = BRAND_START + BRAND_DURATION + BRAND_HOLD;
 
 export interface BrandFrame {
   /** Playhead inside the clip, 0…BRAND_DURATION. */

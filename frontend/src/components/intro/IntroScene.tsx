@@ -28,6 +28,8 @@ interface Props {
   viewBox?: string;
   /** Extra scale applied about the scene centre — phones get a wider fit. */
   fit?: number;
+  /** Lets the entrance dissolve the drawing to white when its clip is done. */
+  opacity?: number;
 }
 
 const ink = { fill: INK, fillRule: "evenodd" as const };
@@ -119,7 +121,12 @@ function Props() {
 
 /* ── scene ─────────────────────────────────────────────────────────────── */
 
-export default function IntroScene({ frame, viewBox = "0 0 1000 600", fit = 1 }: Props) {
+export default function IntroScene({
+  frame,
+  viewBox = "0 0 1000 600",
+  fit = 1,
+  opacity = 1,
+}: Props) {
   return (
     <svg
       viewBox={viewBox}
@@ -127,6 +134,7 @@ export default function IntroScene({ frame, viewBox = "0 0 1000 600", fit = 1 }:
       className="intro-svg"
       aria-hidden="true"
       focusable="false"
+      style={opacity === 1 ? undefined : { opacity }}
     >
       <rect x={-2000} y={-2000} width={6000} height={6000} fill="#ffffff" />
 
