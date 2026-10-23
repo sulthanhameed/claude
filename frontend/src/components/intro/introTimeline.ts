@@ -9,7 +9,7 @@
  * reveal a wider 1400 × 900 restaurant.
  */
 
-export const INTRO_DURATION = 6600;
+export const INTRO_DURATION = 6200;
 export const INTRO_SEEN_KEY = "khang_intro_seen";
 
 export const ART = { w: 527, h: 581 };
@@ -169,7 +169,7 @@ export const SCENE = { w: 1000, h: 600, roomX: 527 };
 export function cameraAt(ms: number): Camera {
   const drift = easeInOut(range(ms, 0, 3200));
   const zoom = easeInOut(range(ms, 3200, 4900));
-  const settle = easeInOut(range(ms, 6000, INTRO_DURATION));
+  const settle = easeInOut(range(ms, 5600, INTRO_DURATION));
 
   // A medium shot of the diner, easing out until the room arrives.
   let scale = lerp(1.14, 1.06, drift);
@@ -198,7 +198,7 @@ export function roomAt(ms: number) {
 
 /** 0 = intro visible, 1 = handed over to the homepage. */
 export function exitAt(ms: number) {
-  return easeInOut(range(ms, 6020, INTRO_DURATION));
+  return easeInOut(range(ms, 5600, INTRO_DURATION));
 }
 
 export interface IntroFrame {
@@ -242,10 +242,9 @@ export function sparkleAt(ms: number) {
   return { amount: t > 0 && t < 1 ? Math.sin(t * Math.PI) : 0, t };
 }
 
-/** Choreography beats, used for the CSS-driven brand card. */
-export function beatAt(ms: number): "eat" | "wide" | "brand" | "out" {
+/** Choreography beats: eat → the room opens up → hand-off. */
+export function beatAt(ms: number): "eat" | "wide" | "out" {
   if (ms < 3400) return "eat";
-  if (ms < 4800) return "wide";
-  if (ms < 6020) return "brand";
+  if (ms < INTRO_DURATION - 600) return "wide";
   return "out";
 }

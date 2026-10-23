@@ -103,14 +103,6 @@ export default function Hero() {
         }}
       />
 
-      {/* Faint Chinese characters */}
-      <div className="pointer-events-none absolute left-2 top-1/4 -z-10 hidden font-cn text-[18rem] leading-none text-emerald-900/[0.04] lg:block">
-        福
-      </div>
-      <div className="pointer-events-none absolute right-2 bottom-1/4 -z-10 hidden font-cn text-[18rem] leading-none text-emerald-900/[0.04] lg:block">
-        康
-      </div>
-
       {/* ─── Content ─── */}
       <div className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-12 px-4 pb-16 pt-32 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-36">
         {/* ─── Left: text content ─── */}

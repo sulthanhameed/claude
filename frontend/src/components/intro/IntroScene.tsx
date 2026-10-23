@@ -283,7 +283,6 @@ export default function IntroScene({ frame, viewBox = "0 0 527 581" }: Props) {
 
       <g
         className="intro-world"
-        data-brand={frame.ms > 4800 ? "true" : "false"}
         transform={`translate(${frame.camera.x} ${frame.camera.y}) scale(${frame.camera.scale})`}
         style={{ willChange: "transform" }}
       >

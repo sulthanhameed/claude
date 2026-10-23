@@ -6,11 +6,11 @@
 
 <div align="center">
 
-`康 · Khang · Chinese · Dimsum`
+**Khang · Chinese · Dimsum**
 
 **Authentic Chinese flavors, crafted fresh.**
 
-[Frontend](./frontend) · [Backend](./backend) · [Database](./database) · [Deployment](./DEPLOYMENT.md)
+[Frontend](./frontend) · [Backend](./backend) · [Database](./database) · [Deployment](./DEPLOYMENT.md) · [Brand](./docs/brand)
 
 </div>
 
@@ -402,6 +402,6 @@ MIT — free to use as a starting point for your own restaurant.
 
 <div align="center">
 
-`康` · *Food made with patience tastes of love.* · `福`
+*Food made with patience tastes of love.*
 
 </div>

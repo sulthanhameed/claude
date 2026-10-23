@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CloseIcon } from "./Icons";
+import { KhangMark } from "./brand/KhangLogo";
 
 export default function AuthModal() {
   const { isAuthOpen, authMode, setAuthMode, closeAuth, login, signup } =
@@ -72,8 +73,8 @@ export default function AuthModal() {
 
           <div className="px-8 pt-10 pb-8">
             {/* Header */}
-            <div className="flex items-baseline gap-3">
-              <span className="font-cn text-2xl text-khang-red">康</span>
+            <div className="flex items-center gap-3">
+              <KhangMark size={30} />
               <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.3em] text-khang-ink/50">
                 {isLogin ? "Welcome Back" : "Join Khang"}
               </span>
