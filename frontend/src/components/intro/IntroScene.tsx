@@ -1,11 +1,15 @@
-import { ARM, BOWL, HEAD, INK, MUG, STEAM, TABLE, TORSO } from "./introArt";
+import { ARM, BOWL, GEO, HEAD, INK, MUG, STEAM, TABLE, TORSO } from "./introArt";
 import { type IntroFrame } from "./introTimeline";
 
 /* ─────────────────────────────────────────────────────────────────────────
-   The intro is the supplied illustration, traced contour for contour, alone on
-   a plain white field — no room, no wall, no floor, nothing behind the diner.
-   Nothing is redrawn: the scene on screen is the drawing itself, and the only
-   motion is the camera move plus a breath in the figure and the steam.
+   The intro is the supplied illustration, alone on a plain white field — no
+   room, no wall, no floor, nothing behind the diner.
+
+   The drawing is not redrawn: every contour is lifted from the source image.
+   It is only cut into the layers the meal needs — the body (with the socket the
+   arm rests in), the head, and the chopping arm, which is hinged at the elbow so
+   the chopsticks can dip and come back. The white gaps of the illustration are
+   kept exactly where the drawing has them.
    ───────────────────────────────────────────────────────────────────────── */
 
 interface Props {
@@ -20,26 +24,39 @@ const ink = { fill: INK, fillRule: "evenodd" as const };
 /* ── the diner ─────────────────────────────────────────────────────────── */
 
 function Diner({ frame }: Props) {
-  const bob = frame.pose.bob * 0.5;
+  const { pose } = frame;
+  const bob = pose.bob * 0.9;
+  // a lean toward the plate as the chopsticks come up, plus the breath
+  const lean = -(pose.bob * 0.45 + pose.arm * 0.07);
+  const nod = (pose.head * 0.35).toFixed(2);
 
   return (
-    <g transform={bob ? `translate(0 ${bob.toFixed(2)})` : undefined}>
-      {TORSO.map((d, i) => (
-        <path key={`t${i}`} d={d} {...ink} />
-      ))}
-      {HEAD.map((d, i) => (
-        <path key={`h${i}`} d={d} {...ink} />
-      ))}
-      {ARM.map((d, i) => (
-        <path key={`a${i}`} d={d} {...ink} />
-      ))}
+    <g
+      transform={`translate(0 ${bob.toFixed(2)}) rotate(${lean.toFixed(2)} 270 470)`}
+    >
+      <g>
+        {TORSO.map((d, i) => (
+          <path key={`t${i}`} d={d} {...ink} />
+        ))}
+
+        <g transform={pose.head ? `rotate(${nod} ${GEO.head.cx} ${GEO.head.cy})` : undefined}>
+          {HEAD.map((d, i) => (
+            <path key={`h${i}`} d={d} {...ink} />
+          ))}
+        </g>
+
+        {/* the hand rests where the drawing puts it — at the mouth */}
+        {ARM.map((d, i) => (
+          <path key={`a${i}`} d={d} {...ink} />
+        ))}
+      </g>
     </g>
   );
 }
 
 /* ── props ─────────────────────────────────────────────────────────────── */
 
-function Bowl() {
+function Props() {
   return (
     <g>
       {BOWL.map((d, i) => (
@@ -48,15 +65,11 @@ function Bowl() {
       {STEAM.map((d, i) => (
         <path key={`s${i}`} d={d} {...ink} className={`intro-steam intro-steam--${i === 0 ? "a" : "b"}`} />
       ))}
-    </g>
-  );
-}
-
-function Mug() {
-  return (
-    <g>
       {MUG.map((d, i) => (
         <path key={`m${i}`} d={d} {...ink} />
+      ))}
+      {TABLE.map((d, i) => (
+        <path key={`w${i}`} d={d} {...ink} />
       ))}
     </g>
   );
@@ -82,11 +95,7 @@ export default function IntroScene({ frame, viewBox = "0 0 1000 600", fit = 1 }:
           transform={`translate(${frame.camera.x} ${frame.camera.y}) scale(${frame.camera.scale})`}
           style={{ willChange: "transform" }}
         >
-          <Bowl />
-          <Mug />
-          {TABLE.map((d, i) => (
-            <path key={`w${i}`} d={d} {...ink} />
-          ))}
+          <Props />
           <Diner frame={frame} />
         </g>
       </g>

@@ -160,8 +160,7 @@ export default function IntroExperience({ onDone }: Props) {
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
         <IntroScene
           frame={frame}
-          viewBox={portrait ? "240 -60 520 620" : "0 0 1000 600"}
-          fit={portrait ? 0.75 : 1}
+          viewBox={portrait ? "250 0 500 604" : "0 0 1000 600"}
         />
       </div>
 
