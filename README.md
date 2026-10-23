@@ -6,7 +6,7 @@
 
 <div align="center">
 
-`康 · Khang · Chinese · Dimsum`
+`康 · Khang · Chinese Restaurant & Dimsum`
 
 **Authentic Chinese flavors, crafted fresh.**
 
