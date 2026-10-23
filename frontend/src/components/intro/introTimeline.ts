@@ -163,20 +163,21 @@ export interface Camera {
 export const SCENE = { w: 1000, h: 600, roomX: 527 };
 
 /**
- * Camera. The diner is framed alone on white, so the move is a slow push in
- * and a gentle settle — no pull-back, nothing behind the figure to reveal.
- * Values are in artwork units for a 527 × 581 viewBox.
+ * Camera. The intro opens tight on the bite and pulls back until the whole
+ * diner composition fills the screen, where it holds for the hand-off.
+ * Values are in artwork units for the 1000 × 600 scene viewBox.
  */
 export function cameraAt(ms: number): Camera {
-  const push = easeInOut(range(ms, 0, 3000));
-  const settle = easeInOut(range(ms, 3000, INTRO_DURATION));
+  const pull = easeInOut(range(ms, 0, 3100));
+  const settle = easeInOut(range(ms, 3100, INTRO_DURATION));
 
-  // A slow push in on the diner, then a gentle settle as the intro hands over.
-  let scale = lerp(1.42, 1.54, push);
-  scale = lerp(scale, 1.47, settle);
+  // 2.2 = close on the head and the chopsticks, 1.78 = the whole scene.
+  let scale = lerp(2.2, 1.78, pull);
+  scale = lerp(scale, 1.76, settle);
 
-  const focusX = lerp(264, 266, push);
-  const focusY = lerp(352, 356, push);
+  // Follow the head as it dips, then centre the whole composition.
+  const focusX = lerp(286, 264, pull);
+  const focusY = lerp(330, 366, pull);
 
   return {
     scale,

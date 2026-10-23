@@ -161,7 +161,7 @@ export default function IntroExperience({ onDone }: Props) {
         <IntroScene
           frame={frame}
           viewBox={portrait ? "250 0 500 604" : "0 0 1000 600"}
-          fit={portrait ? 0.64 : 1}
+          fit={portrait ? 0.5 : 1}
         />
       </div>
 
