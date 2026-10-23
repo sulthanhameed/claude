@@ -461,22 +461,28 @@ body {
 }
 
 /* Steam curls in the scene */
+/* Steam: each wisp swells from the bowl, drifts up and thins out on its own
+   clock, so the loop never beats in sync with itself. */
 .intro-steam {
-  animation: intro-steam 3.6s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: bottom center;
+  will-change: transform, opacity;
+  animation: intro-steam 4.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-.intro-steam--b { animation-delay: 0.7s; }
-.intro-steam--c { animation-delay: 1.4s; }
+.intro-steam--a { animation-delay: 0.15s; }
+.intro-steam--b { animation-delay: 2.1s; }
+.intro-steam--c { animation-delay: 3.4s; }
 
 @keyframes intro-steam {
-  0% { opacity: 0.15; transform: translateY(2px) scaleY(0.94); }
-  45% { opacity: 0.75; }
-  100% { opacity: 0; transform: translateY(-9px) scaleY(1.06); }
+  0%   { opacity: 0;    transform: translateY(5px) scale(0.94, 0.86); }
+  16%  { opacity: 0.85; }
+  58%  { opacity: 0.5;  transform: translateY(-4px) scale(1, 1.02); }
+  100% { opacity: 0;    transform: translateY(-15px) scale(1.06, 1.14); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .intro-steam {
     animation: none !important;
+    opacity: 0.55 !important;
   }
 }

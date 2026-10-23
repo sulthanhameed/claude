@@ -24,22 +24,26 @@ const ink = { fill: INK, fillRule: "evenodd" as const };
 /* ── the diner ─────────────────────────────────────────────────────────── */
 
 function Diner({ frame }: Props) {
-  const { pose } = frame;
+  const { pose, motion } = frame;
   const bob = pose.bob * 0.9;
-  // a lean toward the plate as the chopsticks come up, plus the breath
-  const lean = -(pose.bob * 0.45 + pose.arm * 0.07);
-  const nod = (pose.head * 0.35).toFixed(2);
+  const { lean, nod, breath } = motion;
 
   return (
     <g
-      transform={`translate(0 ${bob.toFixed(2)}) rotate(${lean.toFixed(2)} 270 470)`}
+      transform={[
+        `translate(0 ${bob.toFixed(2)})`,
+        "translate(270 470)",
+        `rotate(${lean.toFixed(2)})`,
+        `scale(${breath.toFixed(4)})`,
+        "translate(-270 -470)",
+      ].join(" ")}
     >
       <g>
         {TORSO.map((d, i) => (
           <path key={`t${i}`} d={d} {...ink} />
         ))}
 
-        <g transform={pose.head ? `rotate(${nod} ${GEO.head.cx} ${GEO.head.cy})` : undefined}>
+        <g transform={pose.head ? `rotate(${nod.toFixed(2)} ${GEO.head.cx} ${GEO.head.cy})` : undefined}>
           {HEAD.map((d, i) => (
             <path key={`h${i}`} d={d} {...ink} />
           ))}
@@ -91,9 +95,9 @@ export default function IntroScene({ frame, viewBox = "0 0 1000 600", fit = 1 }:
       <g transform={fit === 1 ? undefined : `translate(500 300) scale(${fit}) translate(-500 -300)`}>
         <g
           className="intro-world"
-          opacity={frame.figureIn}
+          opacity={frame.figureIn * frame.motion.ink}
           transform={`translate(${frame.camera.x} ${frame.camera.y}) scale(${frame.camera.scale})`}
-          style={{ willChange: "transform" }}
+          style={{ willChange: "transform, opacity" }}
         >
           <Props />
           <Diner frame={frame} />

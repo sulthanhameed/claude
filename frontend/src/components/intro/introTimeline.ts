@@ -9,7 +9,7 @@
  * reveal a wider 1400 × 900 restaurant.
  */
 
-export const INTRO_DURATION = 5600;
+export const INTRO_DURATION = 6400;
 export const INTRO_SEEN_KEY = "khang_intro_seen";
 
 export const ART = { w: 527, h: 581 };
@@ -32,6 +32,16 @@ export const easeInOut = (t: number) =>
   t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 export const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 export const easeIn = (t: number) => t * t;
+
+/** Silky in-and-out for camera moves — used instead of easeInOut for the pull. */
+export const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/** 0 before `from`, 1 after `to`, smoothed in between. */
+export const smoothstep = (v: number, from: number, to: number) => {
+  const t = clamp((v - from) / (to - from));
+  return t * t * (3 - 2 * t);
+};
 
 /** Normalised progress of `ms` through [from, to]. */
 export const range = (ms: number, from: number, to: number) =>
@@ -168,17 +178,29 @@ export const SCENE = { w: 1000, h: 600, roomX: 527 };
  * Values are in artwork units for the 1000 × 600 scene viewBox.
  */
 export function cameraAt(ms: number): Camera {
-  const pull = easeInOut(range(ms, 0, 3100));
-  const settle = easeInOut(range(ms, 3100, INTRO_DURATION));
+  // The move is a single continuous gesture with three phases, the way a motion
+  // designer would shoot it: a long reveal, a spring settle, then a slow drift
+  // that keeps the held frame alive until the hand-off pushes in.
+  const reveal = easeInOutCubic(range(ms, 0, 4200));
+  const settle = easeOut(range(ms, 4200, 5100));
+  const drift = easeInOutCubic(range(ms, 5100, INTRO_DURATION - 700));
+  const push = easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
 
-  // 2.05 = close on the head and the chopsticks, 0.97 = the whole drawing held
-  // at the size it has in the reference artwork, with white around it.
-  let scale = lerp(2.05, 0.97, pull);
-  scale = lerp(scale, 0.95, settle);
+  // pull past the resting size, then relax back into it
+  let scale = lerp(2.2, 0.94, reveal);
+  scale = lerp(scale, 0.955, settle);
+  scale = lerp(scale, 0.95, drift);
 
-  // Follow the head as it dips, then centre the whole composition.
-  const focusX = lerp(286, 264, pull);
-  const focusY = lerp(330, 360, pull);
+  // once the frame is held the camera keeps breathing, very slightly
+  const idle = smoothstep(ms, 4400, 5600) * (1 - push);
+  scale *= 1 + Math.sin((ms - 4400) / 640) * 0.006 * idle;
+
+  // the hand-off pushes in, so the page feels pulled open rather than cut to
+  scale *= 1 + 0.05 * push;
+
+  // the reveal arcs down from the chopsticks, the drift creeps in slightly
+  const focusX = lerp(292, 262, reveal) - 2.5 * drift;
+  const focusY = lerp(318, 362, reveal) + 2 * drift;
 
   return {
     scale,
@@ -199,13 +221,36 @@ export function exitAt(ms: number) {
   return easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
 }
 
+export interface Motion {
+  /** Whole-figure lean, degrees, hinged near the hips. */
+  lean: number;
+  /** Head turn, degrees. */
+  nod: number;
+  /** Breathing scale about the hips — 1.0 ± 0.003. */
+  breath: number;
+  /** 0…1 how much of the drawing is on screen (the ink arrives first). */
+  ink: number;
+}
+
 export interface IntroFrame {
   ms: number;
   pose: Pose;
+  motion: Motion;
   food: { x: number; y: number };
   camera: Camera;
   figureIn: number;
   exit: number;
+}
+
+/** The figure's life: breath, lean and nod, all driven off the pose. */
+export function motionAt(pose: Pose, ms: number): Motion {
+  const bob = pose.bob;
+  return {
+    lean: -(bob * 0.45 + pose.arm * 0.07),
+    nod: pose.head * 0.35,
+    breath: 1 + Math.sin(ms / 880) * 0.0032,
+    ink: smoothstep(ms, 0, 220),
+  };
 }
 
 /** Small organic touches layered on the keyframes. */
@@ -223,6 +268,7 @@ export function frameAt(ms: number): IntroFrame {
   return {
     ms,
     pose,
+    motion: motionAt(pose, ms),
     food: foodAt(pose),
     camera: cameraAt(ms),
     figureIn,
