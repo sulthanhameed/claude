@@ -218,6 +218,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Khang Chinese Restaurant &amp; Dimsum
           </div>
           <div className="flex gap-6 uppercase tracking-[0.2em]">
+            <a href="/brand" className="hover:text-white">Brand film</a>
             <a href="#" className="hover:text-white">Privacy</a>
             <a href="#" className="hover:text-white">Terms</a>
             <a href="#" className="hover:text-white">Refunds</a>

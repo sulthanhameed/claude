@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import IntroBrandTitle from "./IntroBrandTitle";
 import IntroScene from "./IntroScene";
-import { BRAND_DURATION, BRAND_START } from "./introBrand";
 import {
   INTRO_DURATION,
   INTRO_SEEN_KEY,
@@ -10,17 +8,12 @@ import {
   type IntroFrame,
 } from "./introTimeline";
 
-/** `?intro=brand` plays the brand clip on its own, on a loop. */
-export function isBrandOnly(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("intro") === "brand";
-}
-
 export function shouldPlayIntro(): boolean {
   if (typeof window === "undefined") return false;
   const param = new URLSearchParams(window.location.search).get("intro");
   if (param === "0") return false;
   if (param === "1") return true;
+  // the brand film lives on its own page (see BrandFilmPage)
   if (param === "brand") return false;
   // While the site is being built the intro should be reviewable on every reload.
   if (import.meta.env?.DEV) return true;
@@ -67,10 +60,6 @@ export default function IntroExperience({ onDone }: Props) {
 
   const frame: IntroFrame = useMemo(() => frameAt(ms), [ms]);
 
-  // The brand clip is a separate video: the entrance appends it by handing it
-  // elapsed time, and never draws it itself.
-  const [brandOnly] = useState(() => isBrandOnly());
-  const brandMs = brandOnly ? ms % BRAND_DURATION : Math.max(0, ms - BRAND_START);
   const viewBox = portrait ? "250 0 500 604" : "0 0 1000 600";
 
   const finish = useCallback(() => {
@@ -142,12 +131,6 @@ export default function IntroExperience({ onDone }: Props) {
     const tick = (now: number) => {
       if (!start) start = now;
       const elapsed = now - start;
-      if (brandOnly) {
-        // a standalone video: loop it, never hand off
-        setMs(elapsed % BRAND_DURATION);
-        handle = raf(tick);
-        return;
-      }
       const capped = Math.min(INTRO_DURATION, elapsed);
       setMs(capped);
       const nextBeat = beatAt(capped);
@@ -163,7 +146,7 @@ export default function IntroExperience({ onDone }: Props) {
     };
     handle = raf(tick);
     return () => caf(handle);
-  }, [brandOnly, finish, reduced]);
+  }, [finish, reduced]);
 
   const exit = reduced && beat !== "out" ? 0 : frame.exit;
 
@@ -180,19 +163,10 @@ export default function IntroExperience({ onDone }: Props) {
       }}
       role="dialog"
       aria-modal="true"
-      aria-label={brandOnly ? "Khang brand" : "Khang introduction"}
+      aria-label="Khang introduction"
     >
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
-        {/* the clip stands alone at ?intro=brand, on plain white */}
-        {brandOnly ? (
-          <IntroBrandTitle ms={brandMs} viewBox={viewBox} />
-        ) : (
-          <>
-            <IntroScene frame={frame} viewBox={viewBox} />
-            {/* the brand clip, appended to the end of the entrance */}
-            <IntroBrandTitle ms={brandMs} viewBox={viewBox} fade={1 - exit} />
-          </>
-        )}
+        <IntroScene frame={frame} viewBox={viewBox} />
       </div>
     </div>
   );

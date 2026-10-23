@@ -22,6 +22,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import MyOrdersModal from "./components/MyOrdersModal";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import IntroExperience, { shouldPlayIntro } from "./components/intro/IntroExperience";
+import BrandFilmPage, { isBrandFilmRoute } from "./components/intro/BrandFilmPage";
 import { CartIcon } from "./components/Icons";
 
 function FloatingCartButton() {
@@ -82,6 +83,11 @@ function Shell() {
 }
 
 export default function App() {
+  // The brand film has a page of its own; everything else is the restaurant.
+  return isBrandFilmRoute() ? <BrandFilmPage /> : <Site />;
+}
+
+function Site() {
   // Plays once per browser session; `?intro=1` replays it, `?intro=0` skips it.
   const [introActive, setIntroActive] = useState(() => shouldPlayIntro());
 

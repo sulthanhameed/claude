@@ -261,6 +261,8 @@ VITE_API_URL=https://<your-render-api>.onrender.com/api
 - Build command: `npm run build`
 - Publish directory: `frontend/dist`
 - Env: `VITE_API_URL=https://<your-render-api>/api`
+- SPA fallback: `frontend/public/_redirects` (`/*  /index.html  200`) — this is
+  what makes `/brand` (the brand film page) resolve like the rest of the app.
 
 ---
 

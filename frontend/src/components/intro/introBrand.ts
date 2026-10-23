@@ -1,16 +1,12 @@
 /**
  * The brand film — the restaurant's name and logo, as its own short video.
  *
- * It is kept separate from the entrance on purpose: it has its own timeline, it
- * can be played on its own (see `?intro=brand`), and the entrance simply appends
- * it at the end by feeding it elapsed time. Nothing here knows about the diner.
+ * It is separate from the entrance on purpose: it has its own timeline and its
+ * own page (see BrandFilmPage, at /brand). Nothing here knows about the diner.
  */
 
 /** How long the clip runs, from first frame to the held last frame. */
 export const BRAND_DURATION = 2600;
-
-/** Where the clip joins the entrance, in entrance milliseconds. */
-export const BRAND_START = 3800;
 
 export interface BrandFrame {
   /** Playhead inside the clip, 0…BRAND_DURATION. */
