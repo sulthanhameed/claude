@@ -25,7 +25,7 @@ function Diner({ frame }: Props) {
     <g>
       {/* neck — bridges the chin into the shoulders, so the head and the body
           read as one solid silhouette with no white collar gap */}
-      <path d="M236 318 Q266 332 300 302 L312 330 Q288 340 262 344 Q244 348 232 352 Z" fill={INK} />
+      <path d="M236 318 Q266 332 300 302 L322 322 Q296 338 262 344 Q244 348 232 352 Z" fill={INK} />
 
       {/* torso */}
       {TORSO.map((d, i) => (
