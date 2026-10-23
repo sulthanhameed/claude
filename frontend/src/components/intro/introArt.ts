@@ -16,8 +16,8 @@ export const GEO = {
   elbow: { x: 150.3, y: 394.5 },
   /** Where the bite sits at the chopstick tips, on the edge of the mouth. */
   food: { cx: 279, cy: 308, rx: 17.5, ry: 10 },
-  /** The mouth opening, cut only while the food is actually at the lips. */
-  mouth: { cx: 265, cy: 306, rx: 20, ry: 10.5, rot: -18 },
+  /** The bite at the lips, measured off the source drawing. */
+  mouth: { cx: 266, cy: 306, rx: 15.5, ry: 10.5, rot: -12 },
   tableTop: 493,
   bowlRim: { x: 96, y: 448 },
   mug: { x: 410, y: 422 },

@@ -23,9 +23,9 @@ function Diner({ frame }: Props) {
 
   return (
     <g>
-      {/* neck — bridges the chin into the shoulders, so the head and the body
-          read as one solid silhouette with no white collar gap */}
-      <path d="M236 318 Q266 332 300 302 L322 322 Q296 338 262 344 Q244 348 232 352 Z" fill={INK} />
+      {/* neck — bridges the chin into the shoulders so the head and the body
+          read as one solid silhouette */}
+      <path d="M236 327 Q260 333 300 313 Q314 321 322 336 L300 340 Q277 341 258 342 Q242 340 236 346 Z" fill={INK} />
 
       {/* torso */}
       {TORSO.map((d, i) => (
@@ -36,12 +36,12 @@ function Diner({ frame }: Props) {
           arm outline) — the silhouette stays full instead of cracking open */}
       <path d="M296 388 Q344 394 346 470 Q342 484 296 484 Z" fill={INK} />
 
-      {/* head — one full disc: no bite hole, no hollow cheek */}
+      {/* head — one full disc, with the artwork's small bite at the lips */}
       <g transform={`translate(0 ${-pose.bob * 0.45}) rotate(${pose.head} ${GEO.head.cx} ${GEO.head.cy})`}>
         <circle cx={GEO.head.cx} cy={GEO.head.cy} r={GEO.head.r} fill={INK} />
-        {/* the mouth only opens while the chopsticks are actually at the lips,
-            so nothing ever floats on a closed face */}
-        {pose.food > 0.5 && (
+        {/* the bite shows only while the chopsticks are actually at the lips,
+            so the face never carries a floating white hole */}
+        {(pose.food > 0.5 || Math.abs(pose.arm) < 4) && (
           <ellipse
             cx={GEO.mouth.cx}
             cy={GEO.mouth.cy}

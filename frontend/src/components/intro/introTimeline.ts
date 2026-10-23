@@ -171,14 +171,14 @@ export function cameraAt(ms: number): Camera {
   const pull = easeInOut(range(ms, 0, 3100));
   const settle = easeInOut(range(ms, 3100, INTRO_DURATION));
 
-  // 2.05 = close on the head and the chopsticks, 0.8 = the whole scene
-  // sitting small in a wide field of white.
-  let scale = lerp(2.05, 0.8, pull);
-  scale = lerp(scale, 0.76, settle);
+  // 2.05 = close on the head and the chopsticks, 1.3 = the whole diner at the
+  // size of the reference drawing, filling the frame.
+  let scale = lerp(2.05, 1.3, pull);
+  scale = lerp(scale, 1.27, settle);
 
   // Follow the head as it dips, then centre the whole composition.
   const focusX = lerp(286, 264, pull);
-  const focusY = lerp(330, 358, pull);
+  const focusY = lerp(330, 348, pull);
 
   return {
     scale,
