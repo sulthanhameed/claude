@@ -3,7 +3,6 @@ import { CartIcon, MenuIcon, SearchIcon, CloseIcon } from "./Icons";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import UserMenu from "./UserMenu";
-import KhangLogo from "./brand/KhangLogo";
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -90,7 +89,17 @@ export default function Navbar({ onSearch, onOpenAdmin, onOpenOrders }: Props) {
             onClick={(e) => handleNavClick(e, "#home")}
             className="group flex items-center gap-3.5"
           >
-            <KhangLogo size={46} hideTextOnMobile className="drop-shadow-[0_6px_16px_rgba(6,78,46,0.18)]" />
+            <div className="relative grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br from-khang-red to-khang-red-dark shadow-lg shadow-green-900/30 ring-2 ring-white">
+              <span className="font-cn text-2xl text-white leading-none">康</span>
+            </div>
+            <div className="hidden sm:block">
+              <div className="font-brush text-[1.6rem] font-semibold leading-none tracking-tight text-khang-red">
+                Khang
+              </div>
+              <div className="mt-1 font-mono text-[10px] font-medium uppercase tracking-[0.3em] text-black/60">
+                Chinese · Dimsum
+              </div>
+            </div>
           </a>
 
           {/* Desktop nav — ALWAYS VISIBLE */}
@@ -167,7 +176,12 @@ export default function Navbar({ onSearch, onOpenAdmin, onOpenOrders }: Props) {
           />
           <div className="absolute right-0 top-0 h-full w-72 bg-white animate-slide-in-right shadow-2xl">
             <div className="flex items-center justify-between border-b border-khang-red/15 p-5">
-              <KhangLogo size={38} tagline={false} scale={0.9} />
+              <div className="flex items-baseline gap-2">
+                <span className="font-cn text-2xl text-khang-red">康</span>
+                <span className="font-brush text-xl font-semibold tracking-tight text-khang-red">
+                  Khang
+                </span>
+              </div>
               <button
                 onClick={() => setMobileOpen(false)}
                 className="grid h-9 w-9 place-items-center rounded-full bg-khang-red/10 text-khang-red"

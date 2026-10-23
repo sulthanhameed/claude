@@ -1,7 +1,6 @@
 import { PROMO_VIDEO } from "../data/menu";
 import Reveal from "./Reveal";
 import RevealText from "./RevealText";
-import { KhangMark } from "./brand/KhangLogo";
 
 export default function PromoVideo() {
   return (
@@ -98,8 +97,8 @@ export default function PromoVideo() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-khang-ink/30 via-transparent to-transparent" />
 
                 <Reveal variant="up" delay={600} duration={550}>
-                  <div className="absolute bottom-6 right-6 text-white opacity-90 drop-shadow-2xl">
-                    <KhangMark size={72} tone="light" />
+                  <div className="absolute bottom-6 right-6 font-cn text-7xl text-white/90 drop-shadow-2xl leading-none">
+                    康
                   </div>
                 </Reveal>
 
