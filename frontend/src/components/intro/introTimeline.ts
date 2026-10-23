@@ -171,8 +171,9 @@ export interface Camera {
 export const SCENE = { w: 1000, h: 600, roomX: 527 };
 
 /**
- * Camera. The intro opens tight on the bite and pulls back until the whole
- * diner composition fills the screen, where it holds for the hand-off.
+ * Camera. The intro opens tight on the bite, pulls back until the whole drawing
+ * sits inside the frame with white air around it, and holds there while the
+ * restaurant's lockup arrives, before the hand-off.
  * Values are in artwork units for the 1000 × 600 scene viewBox.
  */
 export function cameraAt(ms: number): Camera {
@@ -215,6 +216,27 @@ export function roomAt() {
   };
 }
 
+/**
+ * The wordmark at the end of the intro.
+ *
+ * The drawing settles, then the restaurant's own lockup rises under it: the 康
+ * badge, the name, and the "Chinese · Dimsum" line, in the same type the navbar
+ * uses. Everything is complete by 4.7 s so the reduced-motion hold shows it too.
+ */
+export interface Title {
+  badge: number;
+  name: number;
+  sub: number;
+}
+
+export function titleAt(ms: number): Title {
+  return {
+    badge: easeOut(range(ms, 3820, 4130)),
+    name: easeOut(range(ms, 3980, 4330)),
+    sub: easeOut(range(ms, 4160, 4520)),
+  };
+}
+
 /** 0 = intro visible, 1 = handed over to the homepage. */
 export function exitAt(ms: number) {
   return easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
@@ -235,6 +257,7 @@ export interface IntroFrame {
   ms: number;
   pose: Pose;
   motion: Motion;
+  title: Title;
   food: { x: number; y: number };
   camera: Camera;
   figureIn: number;
@@ -270,6 +293,7 @@ export function frameAt(ms: number): IntroFrame {
     ms,
     pose,
     motion: motionAt(pose, ms),
+    title: titleAt(ms),
     food: foodAt(pose),
     camera: cameraAt(ms),
     figureIn,
