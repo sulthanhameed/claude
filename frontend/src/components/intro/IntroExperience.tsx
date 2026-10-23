@@ -185,7 +185,7 @@ export default function IntroExperience({ onDone }: Props) {
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
         {/* the clip stands alone at ?intro=brand, on plain white */}
         {brandOnly ? (
-          <IntroBrandTitle ms={brandMs} viewBox={viewBox} align="center" />
+          <IntroBrandTitle ms={brandMs} viewBox={viewBox} />
         ) : (
           <>
             <IntroScene frame={frame} viewBox={viewBox} />
