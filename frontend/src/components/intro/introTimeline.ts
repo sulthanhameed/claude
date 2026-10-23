@@ -69,7 +69,7 @@ export interface Pose {
   bob: number;
   /** 0 = eyes open, 1 = happy closed arcs. */
   happy: number;
-  /** 0…1 mouth open. */
+  /** 0…1 how far the mouth is open — 1 is the drawing, 0 is shut. */
   mouth: number;
   /** 0…1 how visible the bite on the chopsticks is. */
   food: number;
@@ -102,34 +102,32 @@ const K = (
  * dips, lifts, eats and settles back — a single readable eating loop.
  */
 export const KEYS = [
-  // a solid silhouette to open on, then the mouth opens as the bite is taken
-  K(0, 0, { food: 0 }),
-  K(620, 6, { food: 1, mouth: 0.4 }),
+  // the drawing as it is, then a breath before the first bite
+  K(0, 0, { mouth: 1 }),
+  K(560, 0, { mouth: 1, bob: 0.8 }),
 
-  // lift the chopsticks off the mouth and swing them down to the bowl
-  K(1080, 26, { head: 8, food: 0, strand: 0.15, bob: 1 }),
-  K(1420, 34, { head: 11, food: 0, strand: 0.3, bob: 2 }),
+  // bite one: the mouth opens to take it, the jaw comes down on the chew
+  K(1000, 0, { mouth: 1.3, bob: -0.6, head: 1 }),
+  K(1320, 0, { mouth: 0.76, bob: 1.8, head: 2.2 }),
+  K(1680, 0, { mouth: 1.24, bob: -0.4, head: 0.8 }),
+  K(2000, 0, { mouth: 0.78, bob: 1.7, head: 2 }),
+  K(2340, 0, { mouth: 1.18, bob: 0.2, head: 1 }),
+  K(2660, 0, { mouth: 0.84, bob: 1.4, head: 1.6 }),
 
-  // scoop and lift back up
-  K(1740, 24, { head: 9, food: 0.2, strand: 0.6, bob: 1 }),
-  K(2060, 11, { head: 5, food: 0.7, strand: 0.95 }),
-  K(2280, 4, { head: 3, food: 0.95, strand: 1 }),
+  // swallow
+  K(3050, 0, { mouth: 0.95, bob: 2.2, head: 0.2 }),
+  K(3600, 0, { mouth: 1, bob: 0.4, head: 0.8 }),
 
-  // back at the mouth
-  K(2460, 0, { food: 1, strand: 0.8, mouth: 0.85 }),
-  K(2640, 0, { food: 0.35, strand: 0.5, mouth: 0.55, bob: 1 }),
+  // bite two, quicker — the meal keeps going while the camera settles
+  K(4200, 0, { mouth: 1.26, bob: -0.3, head: 1.2 }),
+  K(4480, 0, { mouth: 0.8, bob: 1.6, head: 2.2 }),
+  K(4820, 0, { mouth: 1.2, bob: 0, head: 0.9 }),
+  K(5120, 0, { mouth: 0.86, bob: 1.3, head: 1.8 }),
 
-  // chew
-  K(2840, 0, { food: 0, strand: 0.3, mouth: 0.22, bob: 5 }),
-  K(3040, 0, { food: 0, strand: 0.16, mouth: 0.5, bob: -2 }),
-  K(3240, 0, { food: 0, strand: 0.06, mouth: 0.18, bob: 4 }),
-  K(3460, 0, { food: 0, mouth: 0, bob: 0 }),
-
-  // idle while the room and the wordmark arrive
-  K(4300, 0, { bob: 2 }),
-  K(5400, 0, { bob: 0 }),
-  K(6000, 0, { bob: 1.4 }),
-  K(INTRO_DURATION, 0, { bob: 0.5 }),
+  // settle back onto the drawing
+  K(5600, 0, { mouth: 1.02, bob: 0.5, head: 0.6 }),
+  K(6100, 0, { mouth: 1, bob: 0.9, head: 0 }),
+  K(INTRO_DURATION, 0, { mouth: 1, bob: 0.3 }),
 ];
 
 export function poseAt(ms: number): Pose {
@@ -186,10 +184,11 @@ export function cameraAt(ms: number): Camera {
   const drift = easeInOutCubic(range(ms, 5100, INTRO_DURATION - 700));
   const push = easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
 
-  // pull past the resting size, then relax back into it
-  let scale = lerp(2.2, 0.94, reveal);
-  scale = lerp(scale, 0.955, settle);
-  scale = lerp(scale, 0.95, drift);
+  // pull past the resting size, then relax back into it — the whole drawing
+  // sits well inside the frame with white air all around it
+  let scale = lerp(2.0, 0.74, reveal);
+  scale = lerp(scale, 0.765, settle);
+  scale = lerp(scale, 0.755, drift);
 
   // once the frame is held the camera keeps breathing, very slightly
   const idle = smoothstep(ms, 4400, 5600) * (1 - push);
@@ -199,8 +198,8 @@ export function cameraAt(ms: number): Camera {
   scale *= 1 + 0.05 * push;
 
   // the reveal arcs down from the chopsticks, the drift creeps in slightly
-  const focusX = lerp(292, 262, reveal) - 2.5 * drift;
-  const focusY = lerp(318, 362, reveal) + 2 * drift;
+  const focusX = lerp(288, 264, reveal) - 2.5 * drift;
+  const focusY = lerp(322, 352, reveal) + 2 * drift;
 
   return {
     scale,
@@ -255,11 +254,13 @@ export function motionAt(pose: Pose, ms: number): Motion {
 
 /** Small organic touches layered on the keyframes. */
 function garnish(pose: Pose, ms: number): Pose {
-  const chew = range(ms, 2400, 2500) * (1 - range(ms, 3200, 3400));
-  const wobble = Math.sin((ms - 2400) / 110) * 2.2 * chew;
-  const idle = range(ms, 3400, 4200);
-  const breathe = Math.sin(ms / 620) * 1.2 * idle;
-  return { ...pose, head: pose.head + wobble, bob: pose.bob + breathe };
+  // a little wobble rides on every chew, and the body breathes when it rests
+  const resting = smoothstep(ms, 3300, 3900) * (1 - smoothstep(ms, 6100, 6400));
+  const breathe = Math.sin(ms / 640) * 1.1 * resting;
+  // the jaw keeps working between the keys, so the chew never looks keyframed
+  const working = smoothstep(ms, 900, 1100) * (1 - smoothstep(ms, 5200, 5500));
+  const jaw = Math.sin(ms / 95) * 0.045 * working;
+  return { ...pose, mouth: pose.mouth - jaw, head: pose.head + jaw * 8, bob: pose.bob + breathe };
 }
 
 export function frameAt(ms: number): IntroFrame {

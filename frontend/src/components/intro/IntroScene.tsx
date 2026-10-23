@@ -1,4 +1,16 @@
-import { ARM, BOWL, GEO, HEAD, INK, MUG, STEAM, TABLE, TORSO } from "./introArt";
+import {
+  ARM,
+  BOWL,
+  GEO,
+  HEAD,
+  INK,
+  MOUTH,
+  MOUTH_C,
+  MUG,
+  STEAM,
+  TABLE,
+  TORSO,
+} from "./introArt";
 import { type IntroFrame } from "./introTimeline";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -6,10 +18,9 @@ import { type IntroFrame } from "./introTimeline";
    room, no wall, no floor, nothing behind the diner.
 
    The drawing is not redrawn: every contour is lifted from the source image.
-   It is only cut into the layers the meal needs — the body (with the socket the
-   arm rests in), the head, and the chopping arm, which is hinged at the elbow so
-   the chopsticks can dip and come back. The white gaps of the illustration are
-   kept exactly where the drawing has them.
+   The meal is played by closing the mouth the drawing already has (an ink lid
+   over the opening, clipped to the jaw) and by the figure's breath, lean and
+   nod — so the silhouette stays exactly the artwork on every frame.
    ───────────────────────────────────────────────────────────────────────── */
 
 interface Props {
@@ -28,6 +39,13 @@ function Diner({ frame }: Props) {
   const bob = pose.bob * 0.9;
   const { lean, nod, breath } = motion;
 
+  // The mouth in the drawing is an opening in the head's own outline, so the
+  // meal is played by working the head: it opens a touch as the bite arrives
+  // and squeezes down on the chew. The hole travels with the jaw, exactly the
+  // way it would if the drawing were being animated by hand.
+  const open = Math.max(0, pose.mouth - 1) * 0.9; // 0…0.4, the opening widens
+  const bite = Math.max(0, 1 - pose.mouth); //      0…0.4, the jaw compresses
+
   return (
     <g
       transform={[
@@ -43,10 +61,30 @@ function Diner({ frame }: Props) {
           <path key={`t${i}`} d={d} {...ink} />
         ))}
 
-        <g transform={pose.head ? `rotate(${nod.toFixed(2)} ${GEO.head.cx} ${GEO.head.cy})` : undefined}>
+        <g
+          transform={[
+            `rotate(${nod.toFixed(2)} ${GEO.head.cx} ${GEO.head.cy})`,
+            `translate(${GEO.head.cx} 334)`,
+            `scale(${(1 + bite * 0.055).toFixed(4)} ${(1 - bite * 0.075).toFixed(4)})`,
+            `translate(${-GEO.head.cx} -334)`,
+          ].join(" ")}
+        >
           {HEAD.map((d, i) => (
             <path key={`h${i}`} d={d} {...ink} />
           ))}
+
+          {/* the opening widens as the bite comes in… */}
+          {open > 0.002 && (
+            <path
+              d={MOUTH}
+              fill="#ffffff"
+              transform={[
+                `translate(${MOUTH_C.x} ${MOUTH_C.y})`,
+                `scale(${(1 + open).toFixed(3)} ${(1 + open * 0.7).toFixed(3)})`,
+                `translate(${-MOUTH_C.x} ${-MOUTH_C.y})`,
+              ].join(" ")}
+            />
+          )}
         </g>
 
         {/* the hand rests where the drawing puts it — at the mouth */}
