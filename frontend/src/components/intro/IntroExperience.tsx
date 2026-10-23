@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import IntroBrandTitle from "./IntroBrandTitle";
 import IntroScene from "./IntroScene";
+import { BRAND_DURATION, BRAND_START } from "./introBrand";
 import {
   INTRO_DURATION,
   INTRO_SEEN_KEY,
@@ -8,11 +10,18 @@ import {
   type IntroFrame,
 } from "./introTimeline";
 
+/** `?intro=brand` plays the brand clip on its own, on a loop. */
+export function isBrandOnly(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("intro") === "brand";
+}
+
 export function shouldPlayIntro(): boolean {
   if (typeof window === "undefined") return false;
   const param = new URLSearchParams(window.location.search).get("intro");
   if (param === "0") return false;
   if (param === "1") return true;
+  if (param === "brand") return false;
   // While the site is being built the intro should be reviewable on every reload.
   if (import.meta.env?.DEV) return true;
   try {
@@ -46,14 +55,23 @@ export default function IntroExperience({ onDone }: Props) {
     if (typeof window === "undefined" || !window.matchMedia) return false;
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
   });
-  const [ms, setMs] = useState(() => (reduced ? 4600 : 0));
-  const [beat, setBeat] = useState(() => beatAt(reduced ? 4600 : 0));
+  // Reduced motion holds the finished still: the drawing settled and the brand
+  // clip already played out (its last frame is still on screen at 5.7 s).
+  const HOLD_AT = INTRO_DURATION - 700;
+  const [ms, setMs] = useState(() => (reduced ? HOLD_AT : 0));
+  const [beat, setBeat] = useState(() => beatAt(reduced ? HOLD_AT : 0));
   const [leaving, setLeaving] = useState(false);
   const beatRef = useRef(beat);
   const doneRef = useRef(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
   const frame: IntroFrame = useMemo(() => frameAt(ms), [ms]);
+
+  // The brand clip is a separate video: the entrance appends it by handing it
+  // elapsed time, and never draws it itself.
+  const [brandOnly] = useState(() => isBrandOnly());
+  const brandMs = brandOnly ? ms % BRAND_DURATION : Math.max(0, ms - BRAND_START);
+  const viewBox = portrait ? "250 0 500 604" : "0 0 1000 600";
 
   const finish = useCallback(() => {
     if (doneRef.current) return;
@@ -123,14 +141,21 @@ export default function IntroExperience({ onDone }: Props) {
     let start = 0;
     const tick = (now: number) => {
       if (!start) start = now;
-      const elapsed = Math.min(INTRO_DURATION, now - start);
-      setMs(elapsed);
-      const nextBeat = beatAt(elapsed);
+      const elapsed = now - start;
+      if (brandOnly) {
+        // a standalone video: loop it, never hand off
+        setMs(elapsed % BRAND_DURATION);
+        handle = raf(tick);
+        return;
+      }
+      const capped = Math.min(INTRO_DURATION, elapsed);
+      setMs(capped);
+      const nextBeat = beatAt(capped);
       if (nextBeat !== beatRef.current) {
         beatRef.current = nextBeat;
         setBeat(nextBeat);
       }
-      if (elapsed < INTRO_DURATION) {
+      if (capped < INTRO_DURATION) {
         handle = raf(tick);
       } else {
         finish();
@@ -138,7 +163,7 @@ export default function IntroExperience({ onDone }: Props) {
     };
     handle = raf(tick);
     return () => caf(handle);
-  }, [finish, reduced]);
+  }, [brandOnly, finish, reduced]);
 
   const exit = reduced && beat !== "out" ? 0 : frame.exit;
 
@@ -155,15 +180,20 @@ export default function IntroExperience({ onDone }: Props) {
       }}
       role="dialog"
       aria-modal="true"
-      aria-label="Khang introduction"
+      aria-label={brandOnly ? "Khang brand" : "Khang introduction"}
     >
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
-        <IntroScene
-          frame={frame}
-          viewBox={portrait ? "250 0 500 604" : "0 0 1000 600"}
-        />
+        {/* the clip stands alone at ?intro=brand, on plain white */}
+        {brandOnly ? (
+          <IntroBrandTitle ms={brandMs} viewBox={viewBox} />
+        ) : (
+          <>
+            <IntroScene frame={frame} viewBox={viewBox} />
+            {/* the brand clip, appended to the end of the entrance */}
+            <IntroBrandTitle ms={brandMs} viewBox={viewBox} fade={1 - exit} />
+          </>
+        )}
       </div>
-
     </div>
   );
 }

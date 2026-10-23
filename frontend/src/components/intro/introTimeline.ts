@@ -216,27 +216,6 @@ export function roomAt() {
   };
 }
 
-/**
- * The wordmark at the end of the intro.
- *
- * The drawing settles, then the restaurant's own lockup rises under it: the 康
- * badge, the name, and the "Chinese · Dimsum" line, in the same type the navbar
- * uses. Everything is complete by 4.7 s so the reduced-motion hold shows it too.
- */
-export interface Title {
-  badge: number;
-  name: number;
-  sub: number;
-}
-
-export function titleAt(ms: number): Title {
-  return {
-    badge: easeOut(range(ms, 3900, 4180)),
-    name: easeOut(range(ms, 4080, 4380)),
-    sub: easeOut(range(ms, 4240, 4540)),
-  };
-}
-
 /** 0 = intro visible, 1 = handed over to the homepage. */
 export function exitAt(ms: number) {
   return easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
@@ -257,7 +236,6 @@ export interface IntroFrame {
   ms: number;
   pose: Pose;
   motion: Motion;
-  title: Title;
   food: { x: number; y: number };
   camera: Camera;
   figureIn: number;
@@ -293,7 +271,6 @@ export function frameAt(ms: number): IntroFrame {
     ms,
     pose,
     motion: motionAt(pose, ms),
-    title: titleAt(ms),
     food: foodAt(pose),
     camera: cameraAt(ms),
     figureIn,
