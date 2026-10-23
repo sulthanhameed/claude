@@ -231,9 +231,9 @@ export interface Title {
 
 export function titleAt(ms: number): Title {
   return {
-    badge: easeOut(range(ms, 3820, 4130)),
-    name: easeOut(range(ms, 3980, 4330)),
-    sub: easeOut(range(ms, 4160, 4520)),
+    badge: easeOut(range(ms, 3900, 4180)),
+    name: easeOut(range(ms, 4080, 4380)),
+    sub: easeOut(range(ms, 4240, 4540)),
   };
 }
 

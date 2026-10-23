@@ -139,20 +139,29 @@ function Wordmark({ frame }: Props) {
 
   return (
     <g className="intro-title" aria-label="Khang Chinese Restaurant and Dimsum">
-      {/* the badge, with the soft cast shadow the navbar mark carries */}
-      <g transform={`translate(${WORDMARK.badgeX} ${WORDMARK.badgeY}) scale(${pop.toFixed(3)})`} opacity={badge}>
+      {/* the badge — its own line, with the soft shadow the navbar mark carries */}
+      <g
+        transform={`translate(${WORDMARK.centerX} ${WORDMARK.badgeY}) scale(${pop.toFixed(3)})`}
+        opacity={badge}
+      >
         <circle cx={0.5} cy={2.5} r={27} fill={BRAND_DARK} opacity={0.18} />
         <circle r={27} fill={BRAND} />
         <path d={KANG.d} transform={KANG.transform} fill="#ffffff" />
       </g>
 
-      {/* the name */}
-      <g transform={`translate(${WORDMARK.typeX} ${(WORDMARK.nameY + rise).toFixed(2)})`} opacity={name}>
+      {/* the name — centred on its own line */}
+      <g
+        transform={`translate(${(WORDMARK.centerX - WORDMARK.name.width / 2).toFixed(2)} ${(WORDMARK.nameY + rise).toFixed(2)})`}
+        opacity={name}
+      >
         <path d={WORDMARK.name.d} fill={INK} />
       </g>
 
-      {/* the eyebrow, opening out as it fades in */}
-      <g transform={`translate(${WORDMARK.typeX} ${(WORDMARK.subY + rise * 0.6).toFixed(2)})`} opacity={sub * 0.62}>
+      {/* the eyebrow, centred under the name and opening out as it fades in */}
+      <g
+        transform={`translate(${(WORDMARK.centerX - WORDMARK.sub.width / 2).toFixed(2)} ${(WORDMARK.subY + rise * 0.6).toFixed(2)})`}
+        opacity={sub * 0.62}
+      >
         <path d={WORDMARK.sub.d} fill={INK} />
       </g>
     </g>
