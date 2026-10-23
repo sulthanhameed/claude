@@ -46,12 +46,11 @@ export default function IntroExperience({ onDone }: Props) {
     if (typeof window === "undefined" || !window.matchMedia) return false;
     return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
   });
-  const [ms, setMs] = useState(() => (reduced ? 5200 : 0));
-  const [beat, setBeat] = useState(() => beatAt(reduced ? 5200 : 0));
+  const [ms, setMs] = useState(() => (reduced ? 4600 : 0));
+  const [beat, setBeat] = useState(() => beatAt(reduced ? 4600 : 0));
   const [leaving, setLeaving] = useState(false);
   const beatRef = useRef(beat);
   const doneRef = useRef(false);
-  const skipRef = useRef<HTMLButtonElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
   const frame: IntroFrame = useMemo(() => frameAt(ms), [ms]);
@@ -142,7 +141,6 @@ export default function IntroExperience({ onDone }: Props) {
   }, [finish, reduced]);
 
   const exit = reduced && beat !== "out" ? 0 : frame.exit;
-  const roomTint = 1 - Math.abs(1 - frame.wash);
 
   return (
     <div
@@ -152,7 +150,7 @@ export default function IntroExperience({ onDone }: Props) {
       style={{
         opacity: leaving ? 0 : 1 - exit,
         transition: leaving ? "opacity 440ms ease" : undefined,
-        background: `radial-gradient(120% 95% at 50% 42%, #ffffff 0%, rgba(238,248,242,${0.55 + 0.45 * roomTint}) 78%, #eaf6ef 100%)`,
+        background: "#ffffff",
         pointerEvents: exit > 0.95 || leaving ? "none" : "auto",
       }}
       role="dialog"
@@ -162,27 +160,11 @@ export default function IntroExperience({ onDone }: Props) {
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
         <IntroScene
           frame={frame}
-          viewBox={portrait ? "250 96 500 604" : "0 0 1000 600"}
+          viewBox={portrait ? "250 0 500 604" : "0 0 1000 600"}
+          fit={portrait ? 0.64 : 1}
         />
       </div>
 
-      <button
-        ref={skipRef}
-        type="button"
-        className="intro-skip"
-        onClick={() => finish()}
-      >
-        Skip intro
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M5 12h13M13 6l6 6-6 6" />
-        </svg>
-      </button>
-
-      {!reduced && (
-        <div className="intro-progress" aria-hidden="true">
-          <span style={{ animationDuration: `${INTRO_DURATION}ms` }} />
-        </div>
-      )}
     </div>
   );
 }

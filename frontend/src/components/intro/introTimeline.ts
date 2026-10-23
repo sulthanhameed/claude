@@ -9,7 +9,7 @@
  * reveal a wider 1400 × 900 restaurant.
  */
 
-export const INTRO_DURATION = 6200;
+export const INTRO_DURATION = 5600;
 export const INTRO_SEEN_KEY = "khang_intro_seen";
 
 export const ART = { w: 527, h: 581 };
@@ -163,22 +163,20 @@ export interface Camera {
 export const SCENE = { w: 1000, h: 600, roomX: 527 };
 
 /**
- * Camera. At t=0 it frames the artwork tightly; during the pull-back it widens
- * to show the whole room. Values are in artwork units for a 527 × 581 viewBox.
+ * Camera. The diner is framed alone on white, so the move is a slow push in
+ * and a gentle settle — no pull-back, nothing behind the figure to reveal.
+ * Values are in artwork units for a 527 × 581 viewBox.
  */
 export function cameraAt(ms: number): Camera {
-  const drift = easeInOut(range(ms, 0, 3200));
-  const zoom = easeInOut(range(ms, 3200, 4900));
-  const settle = easeInOut(range(ms, 5600, INTRO_DURATION));
+  const push = easeInOut(range(ms, 0, 3000));
+  const settle = easeInOut(range(ms, 3000, INTRO_DURATION));
 
-  // A medium shot of the diner, easing out until the room arrives.
-  let scale = lerp(1.14, 1.06, drift);
-  scale = lerp(scale, 0.755, zoom);
-  scale = lerp(scale, 0.78, settle);
+  // A slow push in on the diner, then a gentle settle as the intro hands over.
+  let scale = lerp(1.42, 1.54, push);
+  scale = lerp(scale, 1.47, settle);
 
-  // Pan from the diner out to the full restaurant.
-  const focusX = lerp(lerp(268, 280, drift), 330, zoom);
-  const focusY = lerp(lerp(298, 306, drift), 316, zoom);
+  const focusX = lerp(264, 266, push);
+  const focusY = lerp(352, 356, push);
 
   return {
     scale,
@@ -187,18 +185,16 @@ export function cameraAt(ms: number): Camera {
   };
 }
 
-/** How visible the restaurant is, and how much the green takes over. */
+/** How the figure and the props fade in at the start. */
 export function roomAt(ms: number) {
   return {
-    wash: easeOut(range(ms, 3400, 4800)),
-    decor: easeOut(range(ms, 3520, 4950)),
     figureIn: easeOut(range(ms, 0, 320)),
   };
 }
 
 /** 0 = intro visible, 1 = handed over to the homepage. */
 export function exitAt(ms: number) {
-  return easeInOut(range(ms, 5600, INTRO_DURATION));
+  return easeInOut(range(ms, INTRO_DURATION - 700, INTRO_DURATION));
 }
 
 export interface IntroFrame {
@@ -206,8 +202,6 @@ export interface IntroFrame {
   pose: Pose;
   food: { x: number; y: number };
   camera: Camera;
-  wash: number;
-  decor: number;
   figureIn: number;
   exit: number;
 }
@@ -223,14 +217,12 @@ function garnish(pose: Pose, ms: number): Pose {
 
 export function frameAt(ms: number): IntroFrame {
   const pose = garnish(poseAt(ms), ms);
-  const { wash, decor, figureIn } = roomAt(ms);
+  const { figureIn } = roomAt(ms);
   return {
     ms,
     pose,
     food: foodAt(pose),
     camera: cameraAt(ms),
-    wash,
-    decor,
     figureIn,
     exit: exitAt(ms),
   };
@@ -242,9 +234,8 @@ export function sparkleAt(ms: number) {
   return { amount: t > 0 && t < 1 ? Math.sin(t * Math.PI) : 0, t };
 }
 
-/** Choreography beats: eat → the room opens up → hand-off. */
-export function beatAt(ms: number): "eat" | "wide" | "out" {
-  if (ms < 3400) return "eat";
-  if (ms < INTRO_DURATION - 600) return "wide";
+/** Choreography beats: the meal, then the hand-off to the homepage. */
+export function beatAt(ms: number): "eat" | "out" {
+  if (ms < INTRO_DURATION - 700) return "eat";
   return "out";
 }

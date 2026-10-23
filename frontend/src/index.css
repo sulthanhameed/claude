@@ -475,66 +475,8 @@ body {
   100% { opacity: 0; transform: translateY(-9px) scaleY(1.06); }
 }
 
-/* ── Controls ───────────────────────────────────────────────── */
-.intro-skip {
-  position: absolute;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.9rem));
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.58rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(6, 78, 46, 0.16);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(8px);
-  color: #064e2e;
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: background 220ms ease, border-color 220ms ease, transform 220ms ease;
-}
-.intro-skip:hover {
-  background: #fff;
-  border-color: rgba(6, 78, 46, 0.32);
-  transform: translateY(-1px);
-}
-.intro-skip:focus-visible {
-  outline: 2px solid #16a34a;
-  outline-offset: 3px;
-}
-
-.intro-progress {
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 2px;
-  background: rgba(6, 78, 46, 0.08);
-}
-.intro-progress span {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg, #16a34a, #064e2e);
-  animation-name: intro-progress;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-@keyframes intro-progress {
-  to { width: 100%; }
-}
-
-@media (max-width: 640px) {
-  .intro-skip { left: 50%; right: auto; transform: translateX(-50%); }
-  .intro-skip:hover { transform: translateX(-50%) translateY(-1px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .intro-steam,
-  .intro-progress span {
+  .intro-steam {
     animation: none !important;
   }
 }
