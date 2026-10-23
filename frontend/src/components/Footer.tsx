@@ -3,7 +3,6 @@ import { MapPinIcon, PhoneIcon } from "./Icons";
 import { newsletterApi } from "../lib/api";
 import Reveal from "./Reveal";
 import RevealText from "./RevealText";
-import BrandLockup from "./BrandLockup";
 
 export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -103,7 +102,19 @@ export default function Footer() {
           <Reveal variant="up" delay={0} duration={500}>
           {/* Brand */}
           <div>
-            <BrandLockup tone="light" size={44} />
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-full bg-white">
+                <span className="font-cn text-2xl text-khang-red leading-none">康</span>
+              </div>
+              <div>
+                <div className="font-brush text-2xl font-medium leading-none">
+                  Khang
+                </div>
+                <div className="mt-1 font-mono text-[9px] font-medium uppercase tracking-[0.3em] text-white/50">
+                  Chinese · Dimsum
+                </div>
+              </div>
+            </div>
             <p className="mt-6 font-body text-[13px] font-light leading-[1.85] text-white/65">
               Three generations of master chefs. From our wok to your home —
               with every fold of a dumpling, a story.
