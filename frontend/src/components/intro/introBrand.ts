@@ -8,6 +8,10 @@
 /** How long the clip runs, from first frame to the held last frame. */
 export const BRAND_DURATION = 2600;
 
+/** Where the clip joins the entrance, in entrance milliseconds — the moment
+ *  the meal settles and the drawing leaves the frame to the name and logo. */
+export const BRAND_START = 3800;
+
 export interface BrandFrame {
   /** Playhead inside the clip, 0…BRAND_DURATION. */
   ms: number;

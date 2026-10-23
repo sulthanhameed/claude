@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import IntroBrandTitle from "./IntroBrandTitle";
 import IntroScene from "./IntroScene";
+import { BRAND_START } from "./introBrand";
 import {
   INTRO_DURATION,
   INTRO_SEEN_KEY,
@@ -61,6 +63,10 @@ export default function IntroExperience({ onDone }: Props) {
   const frame: IntroFrame = useMemo(() => frameAt(ms), [ms]);
 
   const viewBox = portrait ? "250 0 500 604" : "0 0 1000 600";
+
+  // The clip is a separate video; the entrance appends it by handing it elapsed
+  // time, once the meal has played out. It also plays alone at /brand.
+  const brandMs = Math.max(0, ms - BRAND_START);
 
   const finish = useCallback(() => {
     if (doneRef.current) return;
@@ -167,6 +173,8 @@ export default function IntroExperience({ onDone }: Props) {
     >
       <div className="intro-stage" ref={stageRef} tabIndex={-1}>
         <IntroScene frame={frame} viewBox={viewBox} />
+        {/* then the restaurant's name and logo, on the same white stage */}
+        <IntroBrandTitle ms={brandMs} viewBox={viewBox} fade={1 - exit} />
       </div>
     </div>
   );
