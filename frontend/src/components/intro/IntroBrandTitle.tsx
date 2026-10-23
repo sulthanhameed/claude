@@ -47,7 +47,7 @@ export default function IntroBrandTitle({
   // standing alone, the clip is the whole picture: give it the room
   const frame =
     align === "center"
-      ? `translate(500 300) scale(2.2) translate(-500 ${-LOCKUP_CY})`
+      ? `translate(500 300) scale(1.75) translate(-500 ${-LOCKUP_CY})`
       : undefined;
 
   return (
