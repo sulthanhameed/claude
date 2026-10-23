@@ -187,9 +187,9 @@ export function cameraAt(ms: number): Camera {
 
   // pull past the resting size, then relax back into it — the whole drawing
   // sits well inside the frame with white air all around it
-  let scale = lerp(2.0, 0.74, reveal);
-  scale = lerp(scale, 0.765, settle);
-  scale = lerp(scale, 0.755, drift);
+  let scale = lerp(2.0, 0.5, reveal);
+  scale = lerp(scale, 0.535, settle);
+  scale = lerp(scale, 0.52, drift);
 
   // once the frame is held the camera keeps breathing, very slightly
   const idle = smoothstep(ms, 4400, 5600) * (1 - push);
