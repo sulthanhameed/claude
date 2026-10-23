@@ -14,8 +14,10 @@ export const GEO = {
   head: { cx: 258.5, cy: 272, r: 62 },
   /** The elbow end of the arm capsule — the arm's pivot. */
   elbow: { x: 150.3, y: 394.5 },
-  /** The bite at the chopstick tips (the notch cut into the head). */
-  food: { cx: 270, cy: 303, rx: 15, ry: 14 },
+  /** Where the bite sits at the chopstick tips, on the edge of the mouth. */
+  food: { cx: 279, cy: 308, rx: 17.5, ry: 10 },
+  /** The mouth opening, cut only while the food is actually at the lips. */
+  mouth: { cx: 265, cy: 306, rx: 20, ry: 10.5, rot: -18 },
   tableTop: 493,
   bowlRim: { x: 96, y: 448 },
   mug: { x: 410, y: 422 },

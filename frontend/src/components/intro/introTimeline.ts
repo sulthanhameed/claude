@@ -92,9 +92,9 @@ const K = (
  * dips, lifts, eats and settles back — a single readable eating loop.
  */
 export const KEYS = [
-  // the reference illustration, held for a beat
-  K(0, 0, { food: 1 }),
-  K(700, 0, { food: 1 }),
+  // a solid silhouette to open on, then the mouth opens as the bite is taken
+  K(0, 0, { food: 0 }),
+  K(620, 6, { food: 1, mouth: 0.4 }),
 
   // lift the chopsticks off the mouth and swing them down to the bowl
   K(1080, 26, { head: 8, food: 0, strand: 0.15, bob: 1 }),
@@ -171,10 +171,10 @@ export function cameraAt(ms: number): Camera {
   const pull = easeInOut(range(ms, 0, 3100));
   const settle = easeInOut(range(ms, 3100, INTRO_DURATION));
 
-  // 2.05 = close on the head and the chopsticks, 1.12 = the whole scene
+  // 2.05 = close on the head and the chopsticks, 0.8 = the whole scene
   // sitting small in a wide field of white.
-  let scale = lerp(2.05, 1.12, pull);
-  scale = lerp(scale, 1.08, settle);
+  let scale = lerp(2.05, 0.8, pull);
+  scale = lerp(scale, 0.76, settle);
 
   // Follow the head as it dips, then centre the whole composition.
   const focusX = lerp(286, 264, pull);
@@ -187,10 +187,10 @@ export function cameraAt(ms: number): Camera {
   };
 }
 
-/** How the figure and the props fade in at the start. */
-export function roomAt(ms: number) {
+/** The figure is simply there from the first frame — no fade-in. */
+export function roomAt() {
   return {
-    figureIn: easeOut(range(ms, 0, 320)),
+    figureIn: 1,
   };
 }
 
@@ -219,7 +219,7 @@ function garnish(pose: Pose, ms: number): Pose {
 
 export function frameAt(ms: number): IntroFrame {
   const pose = garnish(poseAt(ms), ms);
-  const { figureIn } = roomAt(ms);
+  const { figureIn } = roomAt();
   return {
     ms,
     pose,

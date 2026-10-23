@@ -1,4 +1,4 @@
-import { ART, ARM, GEO, HEAD, TORSO, INK } from "./introArt";
+import { ART, ARM, GEO, TORSO, INK } from "./introArt";
 import { sparkleAt, type IntroFrame } from "./introTimeline";
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -19,35 +19,54 @@ interface Props {
 /* ── the diner ─────────────────────────────────────────────────────────── */
 
 function Diner({ frame }: Props) {
-  const { pose, food } = frame;
+  const { pose } = frame;
 
   return (
     <g>
-      {/* strands of noodles hanging from the bite */}
-      {pose.strand > 0.02 && (
-        <g opacity={pose.strand} stroke={INK} strokeWidth={4.5} fill="none" strokeLinecap="round">
-          <path d={`M${food.x - 6} ${food.y + 9} q-9 26 2 48 q7 14 -1 26`} />
-          <path d={`M${food.x + 5} ${food.y + 10} q7 22 -2 42`} />
-        </g>
-      )}
+      {/* neck — bridges the chin into the shoulders, so the head and the body
+          read as one solid silhouette with no white collar gap */}
+      <path d="M236 318 Q266 332 300 302 L312 330 Q288 340 262 344 Q244 348 232 352 Z" fill={INK} />
 
       {/* torso */}
       {TORSO.map((d, i) => (
         <path key={`t${i}`} d={d} fill={INK} fillRule="evenodd" />
       ))}
 
-      {/* head — the traced silhouette, which already carries the notch where
-          the food sits, so the white bite reads as a hole in the shape */}
+      {/* closes the crease the source art draws inside the body (the resting
+          arm outline) — the silhouette stays full instead of cracking open */}
+      <path d="M296 388 Q344 394 346 470 Q342 484 296 484 Z" fill={INK} />
+
+      {/* head — one full disc: no bite hole, no hollow cheek */}
       <g transform={`translate(0 ${-pose.bob * 0.45}) rotate(${pose.head} ${GEO.head.cx} ${GEO.head.cy})`}>
-        {HEAD.map((d, i) => (
-          <path key={`h${i}`} d={d} fill={INK} />
-        ))}
+        <circle cx={GEO.head.cx} cy={GEO.head.cy} r={GEO.head.r} fill={INK} />
+        {/* the mouth only opens while the chopsticks are actually at the lips,
+            so nothing ever floats on a closed face */}
+        {pose.food > 0.5 && (
+          <ellipse
+            cx={GEO.mouth.cx}
+            cy={GEO.mouth.cy}
+            rx={GEO.mouth.rx}
+            ry={GEO.mouth.ry}
+            transform={`rotate(${GEO.mouth.rot} ${GEO.mouth.cx} ${GEO.mouth.cy})`}
+            fill="#ffffff"
+          />
+        )}
       </g>
 
-      {/* the eating arm: one rigid cut-out that pivots at the elbow */}
+      {/* the eating arm: one rigid cut-out that pivots at the elbow; the hairline
+          white rim is the drawing's own line language, and it keeps the arm
+          legible as it swings across the body */}
       <g transform={`translate(${pose.armX} ${pose.armY}) rotate(${pose.arm} ${GEO.elbow.x} ${GEO.elbow.y})`}>
         {ARM.map((d, i) => (
-          <path key={`a${i}`} d={d} fill={INK} fillRule="evenodd" />
+          <path
+            key={`a${i}`}
+            d={d}
+            fill={INK}
+            fillRule="evenodd"
+            stroke="#ffffff"
+            strokeWidth={2.4}
+            strokeLinejoin="round"
+          />
         ))}
       </g>
 
