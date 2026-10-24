@@ -38,7 +38,7 @@ supabase/
    → **New query**.
 2. Paste **all of [`setup.sql`](./setup.sql)** → **Run**.
 
-That is the four migrations plus the seed in one file: 9 tables, the order
+That is the four migrations plus the seed in one file: 8 tables, the order
 functions, RLS everywhere, then 5 categories / 17 dishes / 4 reviews. Check
 **Table editor** — `products` should say 17 rows. Re-running it is safe.
 

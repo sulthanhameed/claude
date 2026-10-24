@@ -30,7 +30,7 @@ const header = `-- =============================================================
 --  It is the four files in supabase/migrations/ in order, followed by
 --  supabase/seed.sql, so a fresh project ends up with:
 --
---    · 9 tables, 5 enums, indexes and triggers
+--    · 8 tables, 5 enums, indexes and triggers
 --    · place_order / mark_order_paid / track_order / newsletter functions
 --    · row level security on every table
 --    · 5 categories, 17 dishes and 4 house reviews

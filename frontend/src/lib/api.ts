@@ -657,12 +657,22 @@ const previewDriver: Driver = {
 
 /* ── which backend is this build using? ─────────────────────────────────── */
 
-const noBackend = (): never => {
-  throw new ApiError(
-    "Supabase is not configured for this build. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.",
-    0,
+/**
+ * The production build has no Supabase project configured.
+ *
+ * This *rejects* rather than throws on purpose. The UI calls these methods from
+ * inside `useEffect` as `api.list().then(…).catch(…)`, so a synchronous throw
+ * escapes before `.catch()` is attached, React unmounts the whole tree and the
+ * page goes blank. A rejected promise is caught by every existing `.catch()`,
+ * which lets the menu fall back to its curated list and the banner explain why.
+ */
+const noBackend = (): Promise<never> =>
+  Promise.reject(
+    new ApiError(
+      "Supabase is not configured for this build. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.",
+      0,
+    ),
   );
-};
 
 const unconfiguredDriver: Driver = {
   authApi: {
