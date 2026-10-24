@@ -38,6 +38,8 @@ export interface BrandFrame {
   wipe: number;
   /** 0…1 the eyebrow underneath. */
   sub: number;
+  /** Camera scale about the lockup — starts tight and pulls out to 1. */
+  cam: number;
   /** True once the clip has played out. */
   done: boolean;
 }
@@ -46,6 +48,9 @@ const clamp = (v: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const range = (ms: number, from: number, to: number) => clamp((ms - from) / (to - from));
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export function brandAt(ms: number): BrandFrame {
   const t = clamp(ms, 0, BRAND_DURATION);
@@ -58,6 +63,13 @@ export function brandAt(ms: number): BrandFrame {
     wipe: easeInOut(range(t, 260, 820)),
     // the eyebrow opens out under it
     sub: easeOut(range(t, 700, 1120)),
+    // the camera pulls back off the lockup the way the entrance pulls off the
+    // diner: a long reveal that comes to rest, then a slow drift
+    cam: lerp(
+      lerp(1.75, 1.0, easeInOutCubic(range(t, 0, 1500))),
+      0.985,
+      easeInOutCubic(range(t, 1500, BRAND_DURATION - 200)),
+    ),
     done: t >= BRAND_DURATION - 1,
   };
 }

@@ -44,11 +44,14 @@ export default function IntroBrandTitle({
   const pop = 0.74 + 0.26 * f.badge + Math.sin(f.badge * Math.PI) * 0.07;
   const rise = (1 - f.name) * 12;
   const nameX = WORDMARK.centerX - WORDMARK.name.width / 2;
+  // The camera pulls the whole lockup back, about its own centre, exactly the
+  // way the entrance pulls off the diner — same gesture, same cadence.
+  const zoom = `translate(500 ${LOCKUP_CY}) scale(${f.cam.toFixed(4)}) translate(-500 ${-LOCKUP_CY})`;
   // standing alone, the clip is the whole picture: give it the room
   const frame =
     align === "center"
-      ? `translate(500 300) scale(1.15) translate(-500 ${-LOCKUP_CY})`
-      : undefined;
+      ? `translate(500 300) scale(1.15) translate(-500 ${-LOCKUP_CY}) ${zoom}`
+      : zoom;
 
   return (
     <svg
