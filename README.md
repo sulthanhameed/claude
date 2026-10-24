@@ -1,6 +1,8 @@
 # 🏮 Khang Chinese Restaurant & Dimsum
 
-> Full-stack food-ordering platform with **React frontend**, **Node.js backend**, **MongoDB database**, and **real Razorpay + Stripe payment integration**.
+> Full-stack food-ordering platform — **React 19 frontend**, **Supabase backend**
+> (Postgres + Auth + Edge Functions), **Razorpay payments**, and **order emails**
+> to the customer and to **sultham456@gmail.com**.
 
 <div align="center">
 
@@ -8,364 +10,253 @@
 
 **Authentic Chinese flavors, crafted fresh.**
 
-[Frontend](#-frontend) · [Backend](#-backend) · [Database](#-database) · [Payments](#-payment-integration) · [Deploy](#-deployment)
+[Frontend](./frontend) · [Supabase backend](./supabase) · [Deployment](./DEPLOYMENT.md)
 
 </div>
 
 ---
 
-## 📁 Project Structure
-
-The repository is organised into **three clearly separated folders**:
+## 📁 Two folders, one backend
 
 ```
 khang/
-│
-├── 🎨 frontend/             # React 19 + Vite + Tailwind v4
-│   └── README.md            # See for full details
-│
-├── ⚙️  backend/             # Node.js + Express + Mongoose
-│   ├── src/
-│   │   ├── server.js                  # Express bootstrap
-│   │   ├── config/db.js               # MongoDB connection
-│   │   ├── models/                    # 5 Mongoose schemas
-│   │   │   ├── User.js
-│   │   │   ├── Category.js
-│   │   │   ├── Product.js
-│   │   │   ├── Order.js
-│   │   │   └── Review.js
-│   │   ├── controllers/
-│   │   │   ├── authController.js      # signup, login, profile
-│   │   │   ├── productController.js   # CRUD + search
-│   │   │   ├── orderController.js     # Server-side total calc
-│   │   │   ├── paymentController.js   # ★ Razorpay HMAC + Stripe
-│   │   │   └── reviewController.js
-│   │   ├── routes/                    # 5 route files (REST API)
-│   │   ├── middleware/
-│   │   │   ├── auth.js                # JWT + adminOnly
-│   │   │   └── errorHandler.js
-│   │   ├── utils/                     # JWT, orderId, email, SMS
-│   │   └── scripts/seed.js
-│   ├── Dockerfile
-│   ├── render.yaml                    # 1-click Render deploy
-│   ├── package.json
-│   ├── .env.example
-│   └── README.md                      # Full API reference
-│
-├── 🗄  database/            # Schemas, seeds, indexes, ER diagram
-│   ├── schema/              # JSON Schema for each collection
-│   │   ├── users.schema.json
-│   │   ├── categories.schema.json
-│   │   ├── products.schema.json
-│   │   ├── orders.schema.json
-│   │   └── reviews.schema.json
-│   ├── seed/                # Initial data
-│   │   ├── categories.json  # 5 categories
-│   │   ├── products.json    # 18 dishes (full menu)
-│   │   └── admin-user.json
-│   ├── migrations/
-│   │   └── 001-initial.js   # Creates all indexes
-│   ├── scripts/
-│   │   ├── seed.sh          # Seed via shell
-│   │   └── backup.sh        # mongodump → tar.gz
-│   ├── docs/
-│   │   ├── ER-DIAGRAM.md    # ASCII entity-relationship diagram
-│   │   └── INDEXES.md       # All index definitions
-│   └── README.md
-│
-├── 📦 Root build files     # (Vite frontend lives here for build tooling)
-│   ├── src/                # → mirrored to frontend/src/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   └── .env.example
-│
-├── 🐳 docker-compose.yml    # Full local stack in 1 command
-├── ▲  vercel.json           # Frontend deploy config
-└── 📖 README.md             # ← you are here
+├── frontend/     React 19 · TypeScript · Vite 7 · Tailwind 4
+└── supabase/     Postgres schema, RLS, seed, Edge Functions, CLI config
 ```
 
----
+There is no application server to deploy and no database to host separately:
+Supabase *is* the backend. The browser talks to it directly with the anon key —
+row level security decides what each request may see — and the three operations
+that need secrets (pricing + email, Razorpay, the payment webhook) run in Edge
+Functions.
 
-## 🎨 Frontend
+The project is **`jrfmgqccicrpdtqztrpt`** ·
+<https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>.
 
-**React 19 · TypeScript · Vite · Tailwind CSS v4**
+### Commands (from the repo root)
 
-A single-page application with:
+| Command | What it does |
+|---|---|
+| `npm run db:push` | links that project and applies `supabase/migrations/` |
+| `npm run db:types` | regenerates `frontend/src/lib/database.types.ts` from it |
+| `npm run functions:deploy` | deploys `create-order`, `razorpay`, `razorpay-webhook` |
+| `npm run setup:sql` | rebuilds `supabase/setup.sql` after a migration edit |
+| `npm run dev` | the frontend on <http://localhost:5173> |
+| `npm run mock` | the dev-only stand-in for Supabase on `:5000` |
+| `npm run check` | typecheck + production build |
 
-- ✨ **Interactive 5-dish hero swap** — click any dish, it flies to the centre
-- 🎬 **Scroll-triggered animations** — text reveals word-by-word, images fade-zoom in
-- 🍱 **Editorial menu** — category filter, sort, hairline-bordered cards
-- 🛒 **Cart drawer** — auto-calculated subtotal · 5% tax · free delivery > ₹500
-- 💳 **Real payment flow** — Razorpay popup, Stripe support
-- 👤 **Auth system** — Sign in / Sign up with JWT, persisted via `localStorage`
-- 🚚 **Live order tracking** — 4-stage progress with pulsing rings
-- 🔍 **Cmd-K search** — searches name, Chinese name, category, description
-- ⚡ **Admin dashboard** — order management, revenue stats, status updates
+## ✅ Feature checklist
 
-See **[`frontend/README.md`](./frontend/README.md)** for component-level details.
+| Area | Status |
+|---|---|
+| Restaurant landing page with cinematic intro (diner, eating, brand clip) | ✅ |
+| Live menu from Postgres (`products`) | ✅ |
+| Category filter, price sort, instant search | ✅ |
+| Product detail modal, veg/spice indicators | ✅ |
+| Cart drawer with 5% GST + ₹40 delivery (free over ₹500) | ✅ |
+| Sign up / sign in with **Supabase Auth** | ✅ |
+| **Signup emails stored in `auth.users` + `profiles`** (unique, indexed) | ✅ |
+| Session restored and validated on reload | ✅ |
+| Checkout requires a real account | ✅ |
+| Server-side price recalculation in Postgres (`place_order`) | ✅ |
+| **Razorpay** — UPI, cards, wallets, netbanking | ✅ |
+| HMAC-SHA256 signature verification in an Edge Function | ✅ |
+| Razorpay webhook (`payment.captured` / `failed`) | ✅ |
+| Cash on delivery | ✅ |
+| **Customer receipt email** after confirmation | ✅ |
+| **Owner order email → sultham456@gmail.com** | ✅ |
+| Idempotent emails (won't send twice on retry) | ✅ |
+| Live order tracking with 30 s refresh | ✅ |
+| Order history (“My Orders”) | ✅ |
+| Admin dashboard — orders, revenue, status updates | ✅ |
+| Refund action on the `razorpay` function (admin call; no dashboard button yet) | ✅ |
+| Newsletter signup stored in `newsletter_subscribers` | ✅ |
+| Reviews from Postgres (curated fallback) | ✅ |
+| Row level security on every table | ✅ |
+| Responsive mobile UI + floating cart | ✅ |
 
-### Quick start (frontend)
+### Behaviour when the backend is unreachable
+
+The menu falls back to the curated list in `src/data/menu.ts` so the page is
+never empty; checkout is disabled until live data arrives, because an order
+must reference real product ids.
+
+## 🧱 Tech stack
+
+| Layer | Choice |
+|---|---|
+| Frontend | React 19.2, TypeScript 5.9, Vite 7.3, Tailwind CSS 4.1 |
+| Data | Supabase Postgres 15, row level security, SQL functions |
+| Auth | Supabase Auth (email + password) |
+| Server logic | Supabase Edge Functions (Deno) |
+| Payments | Razorpay Checkout + HMAC verification |
+| Email | Resend API (from an Edge Function) |
+| Hosting | Vercel / Netlify (static frontend) + Supabase |
+
+## 🚀 Quick start
+
+### 1. Supabase — project `jrfmgqccicrpdtqztrpt`
 
 ```bash
-npm install
-npm run dev          # → http://localhost:5173
-npm run build        # → produces single-file dist/index.html (~100 KB gzipped)
+# database (migrations in order)
+npm run db:push            # link --project-ref jrfmgqccicrpdtqztrpt + db push
+
+# …or, without the CLI: paste supabase/setup.sql into the SQL Editor
+#     (dashboard → SQL editor → New query → Run) — migrations + seed in one file
 ```
 
----
-
-## ⚙️ Backend
-
-**Node.js (ES Modules) · Express 4 · Mongoose 8**
-
-REST API with **24 endpoints** across auth, products, orders, payments, and reviews.
-
-### Endpoints
-
-| Group | Path | Method | Auth |
-|---|---|---|---|
-| **Auth** | `/api/auth/signup` `/login` `/me` `/logout` | various | JWT |
-| **Products** | `/api/products` `/api/products/:slug` | GET (public), POST/PUT/DELETE (admin) | — / admin |
-| **Orders** | `/api/orders` `/api/orders/me` `/api/orders/:id` `/api/orders/track/:id` | various | JWT / public tracking |
-| **Payments** | `/api/payments/razorpay/create-order` `/verify` `/stripe/create-intent` `/stripe/webhook` `/refund` | POST | JWT / admin |
-| **Reviews** | `/api/reviews` | GET / POST / DELETE | JWT |
-
-See **[`backend/README.md`](./backend/README.md)** for the full endpoint reference.
-
-### Quick start (backend)
+Edge Functions:
 
 ```bash
-cd backend
-cp .env.example .env       # add MONGO_URI + payment keys
-npm install
-npm run seed               # populate menu + create admin user
-npm run dev                # → http://localhost:5000
+npm run functions:deploy   # create-order, razorpay, razorpay-webhook
 ```
 
-### Tech
+Full walkthrough: [`supabase/README.md`](./supabase/README.md) ·
+Dashboard: <https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>
 
-- **Express 4** — REST API
-- **Mongoose 8** — MongoDB ODM
-- **bcryptjs** — password hashing (10 rounds)
-- **jsonwebtoken** — JWT auth (HS256, 7d expiry)
-- **Razorpay SDK + Stripe SDK** — real payment integration
-- **Nodemailer + Twilio** — email & SMS confirmations
-- **Helmet · CORS · express-rate-limit · Morgan** — security & logging
+### 2. Frontend
 
----
+```bash
+cd frontend
+cp .env.example .env      # then fill in the two Supabase values
+npm install
+npm run dev               # http://localhost:5173
+```
+
+```env
+VITE_SUPABASE_URL=https://jrfmgqccicrpdtqztrpt.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon public key from Project Settings → API>
+```
+
+Until the key is filled in, the dev build uses the bundled in-memory stand-in
+(`npm run mock` in a second terminal) — menu, signup, COD orders, tracking,
+admin — so the UI is never blocked on credentials.
+
+### 3. Edge Function secrets
+
+```bash
+npx supabase secrets set RAZORPAY_KEY_ID=… RAZORPAY_KEY_SECRET=… \
+  RAZORPAY_WEBHOOK_SECRET=… RESEND_API_KEY=… \
+  EMAIL_FROM="Khang <orders@yourdomain.com>"
+```
+
+### 4. Make yourself an admin
+
+```sql
+update public.profiles
+   set role = 'admin'
+ where id = (select id from auth.users where email = 'you@example.com');
+```
+
+## 🔧 Environment variables
+
+### Frontend (`frontend/.env`)
+
+| Key | What it is |
+|---|---|
+| `VITE_SUPABASE_URL` | Project URL — `https://<ref>.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Anon public key (safe in the browser; RLS is the gate) |
+| `VITE_PREVIEW_API` | *dev only* — REST base for the local mock when Supabase is unset |
+
+### Edge Function secrets (`supabase secrets set`)
+
+| Key | Used by |
+|---|---|
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | `razorpay`, `razorpay-webhook` |
+| `RAZORPAY_WEBHOOK_SECRET` | `razorpay-webhook` |
+| `RESEND_API_KEY`, `EMAIL_FROM` | `create-order`, `razorpay`, `razorpay-webhook` |
+| `ORDER_NOTIFY_EMAIL` | defaults to `sultham456@gmail.com` |
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are injected
+by the platform — never set them by hand, and never ship the service-role key to
+the browser.
+
+## 💳 Razorpay
+
+1. Dashboard → **Settings → API Keys** → generate (test mode first).
+2. `supabase secrets set RAZORPAY_KEY_ID=rzp_test_… RAZORPAY_KEY_SECRET=…`
+3. Webhook: **Settings → Webhooks** → add
+   `https://<ref>.supabase.co/functions/v1/razorpay-webhook`,
+   events `payment.captured`, `payment.failed`, and copy the signing secret into
+   `RAZORPAY_WEBHOOK_SECRET`.
+
+The key secret never reaches the browser: the Edge Function creates the
+Razorpay order and verifies the signature, then calls `mark_order_paid()`.
+
+## 📧 Order emails
+
+Every confirmed order sends two messages from an Edge Function:
+
+- a receipt to the customer's account email;
+- the kitchen copy to `ORDER_NOTIFY_EMAIL` (default **sultham456@gmail.com**).
+
+`orders.customer_email_sent_at` / `owner_email_sent_at` make retries idempotent:
+a replayed webhook or a repeated verification never emails twice.
 
 ## 🗄 Database
 
-**MongoDB** (local via Docker, or hosted on MongoDB Atlas)
+Four migrations, applied in order:
 
-Five collections (`users`, `categories`, `products`, `orders`, `reviews`)
-with full JSON Schema documentation, seed data, indexes, and ER diagram in
-**[`database/`](./database/README.md)**.
+| File | What it creates |
+|---|---|
+| `…_schema.sql` | tables, enums, indexes, triggers (profile creation, rating rollups) |
+| `…_functions.sql` | `place_order`, `mark_order_paid`, `track_order`, refunds, newsletter |
+| `…_rls.sql` | row level security for every table |
+| `…_order_reads.sql` | `my_orders`, `get_my_order`, `admin_list_orders` |
 
-### Quick start (database)
+Then `supabase/seed.sql` for the 17 dishes, 5 categories and 4 house reviews.
 
-```bash
-# Option 1: Local Mongo via Docker
-docker run -d --name khang-mongo -p 27017:27017 mongo:7
-
-# Option 2: MongoDB Atlas — get free M0 cluster at mongodb.com/atlas
-
-# Then seed:
-./database/scripts/seed.sh "mongodb://localhost:27017/khang"
-```
-
-### Seed data
-
-- **5 categories**: Dim Sum · Noodles & Soups · Rice & Curry · Snacks · Drinks
-- **18 products** (full Khang menu with prices, ratings, Chinese names, ingredients)
-- **1 admin user**: `admin@khang.com` / `admin123`
-
-See **[`database/docs/ER-DIAGRAM.md`](./database/docs/ER-DIAGRAM.md)** for
-the full entity-relationship diagram and **[`database/docs/INDEXES.md`](./database/docs/INDEXES.md)**
-for the complete index definitions.
-
----
-
-## 💳 Payment Integration
-
-**Real payment gateways** — not simulated.
-
-### Supported methods
-
-| Method | Gateway | Use Case |
-|---|---|---|
-| 📱 **UPI** | Razorpay | GPay, PhonePe, Paytm, BHIM |
-| 💳 **Cards** | Razorpay / Stripe | Visa, Mastercard, RuPay, Amex |
-| 👛 **Wallets** | Razorpay | Paytm, Mobikwik, Freecharge |
-| 💵 **COD** | — | Cash on Delivery |
-
-### End-to-end flow (Razorpay example)
+`supabase/setup.sql` is those five files stitched into one paste for the SQL
+Editor — generated by `npm run setup:sql`, never edited by hand.
 
 ```
-1. User clicks "Pay ₹450 Securely →" in Checkout modal
-2. Frontend → POST /api/orders  (creates pending order, recalculates totals server-side)
-3. Frontend → POST /api/payments/razorpay/create-order
-   ← backend returns { razorpayOrderId, amount, key, customer }
-4. Frontend loads https://checkout.razorpay.com/v1/checkout.js
-5. Razorpay popup opens (pre-filled with customer info, themed green)
-6. User pays with test card 4111 1111 1111 1111 (OTP: 1234)
-7. Razorpay returns { razorpay_payment_id, signature } to handler
-8. Frontend → POST /api/payments/razorpay/verify
-9. Backend recomputes HMAC-SHA256 of (order_id|payment_id), compares signature
-10. ✅ Order marked "paid" → email + SMS dispatched
-11. Frontend shows success screen with Order ID
-12. Admin sees the order in dashboard with "PAID" badge
+profiles ──┐
+           ├── orders ──┬── order_items ── products ── categories
+auth.users ┘            └── order_tracking
+products ── reviews        newsletter_subscribers
 ```
 
-### Razorpay setup
+## 🔐 Security summary
 
-1. Sign up at [razorpay.com](https://razorpay.com) (free)
-2. Dashboard → **API Keys → Generate Test Key**
-3. Add to `backend/.env`:
- ```env
- RAZORPAY_KEY_ID=rzp_test_xxx
- RAZORPAY_KEY_SECRET=your_secret
- ```
-4. Test card: `4111 1111 1111 1111` · any future expiry · CVV `123` · OTP `1234`
+- Prices, tax and delivery are computed in `place_order()` from the menu table;
+  the cart's numbers are never trusted.
+- Every table has RLS. Orders and their lines are visible only to their owner
+  (or an admin); newsletter rows are readable by nobody.
+- Order writes go through `SECURITY DEFINER` functions, so there is no insert
+  path from the browser.
+- Razorpay signatures are verified with a constant-time comparison; the webhook
+  verifies its own HMAC.
+- Profile role changes from the client are silently ignored.
 
-### Stripe setup
+## 🧪 Testing checklist
 
-1. Sign up at [stripe.com](https://stripe.com)
-2. Dashboard → **Developers → API Keys**
-3. Add to `backend/.env`:
- ```env
- STRIPE_SECRET_KEY=sk_test_xxx
- STRIPE_PUBLISHABLE_KEY=pk_test_xxx
- ```
-4. For local webhook testing:
- ```bash
- stripe listen --forward-to localhost:5000/api/payments/stripe/webhook
- ```
- Copy the printed `whsec_xxx` into `STRIPE_WEBHOOK_SECRET`
-5. Test card: `4242 4242 4242 4242`
+- [ ] Sign up → a row appears in `auth.users` **and** `profiles`
+- [ ] Add a dish → cart shows 5% GST, ₹40 delivery (free over ₹500)
+- [ ] Cash on delivery → order appears in "My Orders", two emails sent
+- [ ] UPI/card → Razorpay popup opens, verification marks the order paid
+- [ ] Close the tab mid-payment → the webhook still marks it paid
+- [ ] `/track` with the order id shows the timeline
+- [ ] Another account cannot read that order (RLS)
+- [ ] Admin dashboard lists every order and can move one to *preparing*
+- [ ] Newsletter subscribe → row in `newsletter_subscribers`
 
-### Security
+## 🆘 Troubleshooting
 
-- **HMAC-SHA256 signature verification** on every Razorpay payment (server-side)
-- **Stripe webhook signatures** verified via `stripe.webhooks.constructEvent`
-- **Server-side total recalculation** — never trusts client-sent prices
-- **Idempotent** — duplicate webhook events are safe to receive
-- **Refund support** — admin can refund any paid order via `POST /api/payments/refund`
-
----
-
-## 🚀 Quick Start (Full Stack)
-
-### Prerequisites
-
-- Node.js 18+
-- Docker (or MongoDB Atlas)
-- Razorpay or Stripe test account (optional — site works in offline demo mode without)
-
-### One-command full stack with Docker
-
-```bash
-# (Optional) Create backend/.env with your payment keys first
-docker compose up
-
-# In another terminal:
-npm install
-npm run dev          # → http://localhost:5173
-```
-
-That spins up:
-- MongoDB on `:27017`
-- Backend API on `:5000` (auto-seeded with menu + admin user)
-- Frontend on `:5173`
-
-### Manual setup
-
-```bash
-# Terminal 1 — Database (or use Atlas)
-docker run -d --name khang-mongo -p 27017:27017 mongo:7
-
-# Terminal 2 — Backend
-cd backend
-cp .env.example .env       # fill in MONGO_URI + payment keys
-npm install
-npm run seed
-npm run dev
-
-# Terminal 3 — Frontend
-cp .env.example .env       # adjust VITE_API_URL if needed
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173`. Sign in with `admin@khang.com` / `admin123`
-to see the admin dashboard.
-
----
-
-## 🌐 Deployment
-
-| Layer | Platform | Config |
-|---|---|---|
-| **Frontend** | Vercel / Netlify / GitHub Pages | `vercel.json` (built-in) |
-| **Backend** | Render / Railway / Fly.io / Heroku | `backend/render.yaml` (1-click) |
-| **Database** | MongoDB Atlas (free M0 tier) | — |
-
-### Frontend → Vercel
-
-```bash
-vercel --prod        # auto-detects Vite config
-```
-
-Set env var `VITE_API_URL` to your deployed backend URL.
-
-### Backend → Render
-
-1. Push to GitHub
-2. Render dashboard → **New → Blueprint** → select repo
-3. Fill in env vars (`MONGO_URI`, `RAZORPAY_*`, `STRIPE_*`)
-4. Auto-deploys on every push
-
-### Database → MongoDB Atlas
-
-1. Create a free M0 cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Network Access → Allow from anywhere (`0.0.0.0/0`)
-3. Copy connection string → `MONGO_URI` env var
-4. Seed: `./database/scripts/seed.sh "<your-atlas-uri>"`
-
----
-
-## 🔒 Security Summary
-
-- Passwords hashed with **bcrypt** (10 rounds)
-- JWT signed with **HS256**, 7-day expiry, stored client-side
-- **Razorpay HMAC-SHA256 signature** verified server-side on every payment
-- **Stripe webhook signatures** verified via `constructEvent`
-- **Server-side total recalculation** prevents price tampering
-- **Helmet** sets sane HTTP security headers
-- **CORS** restricted to `CLIENT_URL`
-- **Rate limit** of 300 req / 15min per IP
-- **Sensitive fields** stripped from JSON responses (`password`)
-- **Role-based access** (`user` / `admin`) on protected routes
-
----
+| Symptom | Fix |
+|---|---|
+| “Supabase is not configured” | `.env` has no `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` |
+| Menu empty but login works | seed missing — run `supabase/seed.sql` |
+| Signup says “check your inbox” | project has *Confirm email* on; confirm, or turn it off in Auth → Providers |
+| “Razorpay is not configured” | secrets not set, or functions not redeployed |
+| Payments succeed but order stays pending | webhook URL/secret wrong; the client-side verify should still have caught it |
+| Emails missing | `RESEND_API_KEY` unset or `EMAIL_FROM` domain not verified |
 
 ## 📜 License
 
-MIT — free to use as a starting point for your own restaurant.
+MIT — see [LICENSE](./LICENSE) if present.
 
 ## 🙏 Credits
 
-- **Imagery & video** — [Pexels](https://www.pexels.com)
-- **Fonts** — [Google Fonts](https://fonts.google.com): Playfair Display, Outfit, Manrope, Space Grotesk, Ma Shan Zheng
-- **Payments** — [Razorpay](https://razorpay.com) · [Stripe](https://stripe.com)
-- **Inspired by** Khang Restaurant ([@khang.resto](https://www.instagram.com/khang.resto))
-
----
-
-<div align="center">
-
-`康` · *Food made with patience tastes of love.* · `福`
-
-</div>
+Menu copy, dish names and photography curated for the Khang restaurant brand.
+Illustration traced from the supplied artwork; all custom type is outlined
+vector, so nothing depends on a webfont.

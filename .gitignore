@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+.env.production
+frontend/.env
+
+# Logs & OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Tooling
+.vite/
+*.tsbuildinfo
+
+# Supabase CLI scratch
+supabase/.temp/
+supabase/.branches/
+
+# Edge Function secrets for `supabase functions serve`
+supabase/functions/.env

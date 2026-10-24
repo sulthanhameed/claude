@@ -1,152 +1,127 @@
 # 🎨 Khang Frontend
 
-> React 19 · TypeScript · Vite · Tailwind CSS v4 — single-page food-ordering UI for Khang Chinese Restaurant.
+> React 19 · TypeScript · Vite 7 · Tailwind CSS v4 — the customer-facing
+> restaurant app. Talks to **Supabase** (Postgres + Auth + Edge Functions),
+> opens Razorpay Checkout, and uses real product ids for a real cart.
 
-## 📁 Folder Layout
+---
 
-> ⚠ **Note**: For Vite to bundle correctly with `vite-plugin-singlefile`, the
-> actual frontend source lives at the **project root** (`/src`, `/index.html`,
-> `/vite.config.ts`, `/package.json`). This `frontend/` folder mirrors the
-> same logical structure for documentation purposes.
->
-> The mapping is:
->
-> | Logical | Actual path |
-> |---|---|
-> | `frontend/src/` | `../src/` |
-> | `frontend/index.html` | `../index.html` |
-> | `frontend/package.json` | `../package.json` |
-> | `frontend/vite.config.ts` | `../vite.config.ts` |
-> | `frontend/.env.example` | `../.env.example` |
-> | `frontend/vercel.json` | `../vercel.json` |
+## 📁 Folder layout
 
 ```
 frontend/
-├── README.md                ← you are here
-├── public/                  (optional static assets folder)
-└── src/                     (mirrors ../src)
-    ├── App.tsx              # Root: providers + section composition
-    ├── main.tsx             # React 19 mount
-    ├── index.css            # Tailwind v4 @theme tokens + animations
-    │
-    ├── components/          # 22 UI components
-    │   ├── Navbar.tsx
-    │   ├── Hero.tsx                # Interactive 5-dish swap
-    │   ├── FeaturedCarousel.tsx
-    │   ├── MenuSection.tsx
-    │   ├── Categories.tsx
-    │   ├── FoodCard.tsx
-    │   ├── FoodDetailModal.tsx
-    │   ├── CartDrawer.tsx
-    │   ├── CheckoutModal.tsx       # ★ Real payment flow
-    │   ├── AuthModal.tsx           # Sign in + Sign up
-    │   ├── UserMenu.tsx            # Profile dropdown
-    │   ├── AdminDashboard.tsx      # ★ Order management
-    │   ├── SearchModal.tsx
-    │   ├── ScrollProgressBar.tsx
-    │   ├── SectionHeading.tsx
-    │   ├── Reveal.tsx              # Scroll-trigger reveals
-    │   ├── RevealText.tsx          # Word-by-word reveal
-    │   ├── TopFoods.tsx
-    │   ├── PromoVideo.tsx          # About section with video
-    │   ├── ChefSurprise.tsx
-    │   ├── OrderTracking.tsx
-    │   ├── Reviews.tsx
-    │   ├── Footer.tsx
-    │   ├── Icons.tsx               # Inline SVG icons
-    │   └── decor/
-    │       ├── Lantern.tsx
-    │       └── GoldDivider.tsx
-    │
-    ├── context/             # Global state via React Context
-    │   ├── AuthContext.tsx         # JWT + localStorage + role
-    │   └── CartContext.tsx         # Items + auto-calc totals
-    │
-    ├── lib/                 # ★ Backend integration
-    │   ├── api.ts                  # Typed REST client
-    │   ├── razorpay.ts             # Razorpay SDK loader
-    │   └── payments.ts             # Payment orchestrator
-    │
-    ├── hooks/
-    │   └── useScrollReveal.ts      # IntersectionObserver wrapper
-    │
-    ├── data/
-    │   └── menu.ts                 # Fallback menu (used offline)
-    │
-    └── utils/
-        └── cn.ts                   # className merge helper
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts            # dev server + /api proxy for the local mock
+├── vercel.json               # SPA rewrite + security headers
+├── public/                   # brand SVGs, _redirects (Netlify)
+├── mock/                     # dev-only REST stand-in for Supabase (npm run mock)
+├── .env.example
+└── src/
+    ├── App.tsx               # providers + section composition + routes
+    ├── main.tsx
+    ├── index.css             # Tailwind v4 theme tokens + intro styles
+    ├── components/           # 25 UI components
+    │   ├── Navbar / Hero / FeaturedCarousel / MenuSection
+    │   ├── FoodCard / FoodDetailModal / CartDrawer
+    │   ├── CheckoutModal     # Razorpay + COD through the Edge Functions
+    │   ├── AuthModal / UserMenu
+    │   ├── MyOrdersModal / OrderTracking / AdminDashboard
+    │   ├── SearchModal / Reviews / Footer
+    │   └── intro/            # the entrance film (diner, brand clip, /brand)
+    ├── context/
+    │   ├── AuthContext.tsx   # Supabase session + profile
+    │   ├── MenuContext.tsx   # products from Supabase, static fallback
+    │   └── CartContext.tsx
+    ├── lib/
+    │   ├── supabase.ts       # the client (typed with Database)
+    │   ├── database.types.ts # tables/enums/RPCs as TypeScript (npm run types)
+    │   ├── api.ts            # typed data layer over Supabase (+ dev mock)
+    │   ├── payments.ts       # order → Razorpay → verify
+    │   └── razorpay.ts       # Checkout SDK loader
+    ├── data/menu.ts          # fallback menu (used only if the project is down)
+    ├── hooks/useScrollReveal.ts
+    └── utils/cn.ts
 ```
 
-## 🚀 Run
+---
+
+## 🚀 Local development
 
 ```bash
-# from the repository root (because Vite reads files from there)
-cd ..
+cd frontend
+cp .env.example .env        # fill in the two Supabase values
 npm install
-npm run dev          # → http://localhost:5173
-npm run build        # → produces single-file dist/index.html
+npm run dev                 # → http://localhost:5173
 ```
-
-## 🔧 Environment Variables (`.env`)
 
 ```env
-VITE_API_URL=http://localhost:5000/api   # backend URL
+VITE_SUPABASE_URL=https://<ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
 ```
 
-If `VITE_API_URL` is unset or the backend is offline, the app gracefully
-falls back to offline demo mode (simulated auth, generated order IDs).
+The anon key is designed for browsers — row level security is what protects the
+data. Never put the service-role key here.
 
-## 🎨 Tech Stack
+### Running without a Supabase project
 
-| Layer | Tech |
-|---|---|
-| Framework | **React 19** + TypeScript 5.9 |
-| Build | **Vite 7** + `vite-plugin-singlefile` |
-| Styling | **Tailwind CSS v4** with `@theme` tokens |
-| State | React Context (no Redux needed) |
-| Animations | Custom CSS + IntersectionObserver (no Framer Motion) |
-| Payments | Razorpay JS SDK + Stripe Elements (via backend) |
-| Fonts | Playfair Display · Outfit · Manrope · Space Grotesk · Ma Shan Zheng |
-
-## 💳 Payment Integration (Frontend)
-
-| File | Role |
-|---|---|
-| `src/lib/api.ts` | Typed fetch wrapper for all 20+ backend endpoints. JWT attached automatically from `localStorage`. |
-| `src/lib/razorpay.ts` | Lazy-loads `checkout.razorpay.com/v1/checkout.js` and opens the Razorpay popup with theme + prefilled customer info. |
-| `src/lib/payments.ts` | High-level `runCheckout()` orchestrator: creates the backend order → opens gateway → verifies signature → returns success. |
-| `src/components/CheckoutModal.tsx` | UI with form, payment method picker, processing state, error display, success screen. |
-
-### Frontend payment flow
-
-```
-User clicks "Pay ₹450 Securely →"
-    ↓
-runCheckout()  in src/lib/payments.ts
-    ↓
-ordersApi.create()       → POST /api/orders          → pending order
-    ↓
-paymentsApi.createRazorpayOrder()  → POST /api/payments/razorpay/create-order
-    ↓
-openRazorpayCheckout()   → loads Razorpay popup
-    ↓
-User pays (test card: 4111 1111 1111 1111, OTP: 1234)
-    ↓
-handler({ razorpay_payment_id, signature })
-    ↓
-paymentsApi.verifyRazorpay()  → POST /api/payments/razorpay/verify
-    ↓
-✅ success → show Order ID + clear cart
-```
-
-## 📦 Deploy
+Leave the two values empty and start the local REST mock:
 
 ```bash
-# Vercel (auto-detects Vite config)
-vercel --prod
-
-# Or any static host — the build outputs a single self-contained
-# dist/index.html (~100 KB gzipped, CSS + JS inlined)
+npm run mock                      # :5000, in-memory menu + orders
 ```
 
-See `../vercel.json` for production headers.
+The dev build then uses its preview driver (`/api` → proxied to :5000 by
+`vite.config.ts`). Production builds refuse to run without Supabase rather than
+quietly pointing at a mock.
+
+### Scripts
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Vite dev server on `0.0.0.0:5173` |
+| `npm run mock` | Dev-only REST stand-in for Supabase on `:5000` |
+| `npm run build` | Production build → single `dist/index.html` |
+| `npm run preview` | Preview the production build |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run check` | `typecheck` + a production build, in one go |
+| `npm run types` | Regenerate `database.types.ts` from the live project |
+
+---
+
+## 🔌 Where each feature gets its data
+
+| Feature | Supabase object |
+|---|---|
+| Menu | `products` (select; RLS: public) |
+| Search / filter / sort | query on `products` |
+| Signup / login | `auth.signUp` / `auth.signInWithPassword` |
+| Session | Supabase session + `profiles` row |
+| Checkout | Edge Function `create-order` |
+| Payment | Edge Function `razorpay` (create / verify) |
+| Order history | RPC `my_orders()` |
+| Live tracking | RPC `track_order(orderId)` (30 s auto-refresh) |
+| Reviews | `reviews` (select) |
+| Newsletter | RPC `subscribe_newsletter(email)` |
+| Admin | RPC `admin_list_orders()`, `admin_set_order_status()` |
+
+### Behaviour when the backend is unreachable
+
+- The menu falls back to the curated list for browsing.
+- Checkout is **disabled** with a retry prompt — fake orders are never written.
+- Sign-in fails with a clear error rather than creating a fake session.
+- The menu section shows the connection error.
+
+---
+
+## 🎬 The entrance
+
+`components/intro/` holds the whole opening sequence:
+
+- `IntroScene` — the traced diner, eating, on plain white (no room, no props).
+- `IntroExperience` — the 8.85 s entrance: the meal, a dissolve, then the brand
+  clip, then the hand-off to the page. Plays once per session (`?intro=1`
+  replays, `?intro=0` skips), and reduced-motion visitors get the held frame.
+- `BrandFilmPage` — the same name-and-logo clip on its own page at **`/brand`**,
+  with Replay and “Enter the restaurant”.

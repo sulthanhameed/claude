@@ -1,0 +1,6 @@
+{
+  "//": "The Edge Functions are Deno, the frontend is browser TypeScript — enable Deno only for supabase/functions so the two type worlds do not collide.",
+  "deno.enable": false,
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.lint": true
+}
