@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       // Local development: the frontend calls `/api/...` and Vite forwards it
-      // to the local mock API (.preview/mock-api.mjs). Only used when the
+      // to the local mock API (`npm run mock`). Only used when the
       // Supabase env vars are empty; production talks to Supabase directly.
       proxy: {
         "/api": {

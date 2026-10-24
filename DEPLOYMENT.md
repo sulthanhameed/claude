@@ -160,9 +160,9 @@ cd frontend && npm run dev
 ```
 
 If you only want to click through the UI, leave `VITE_SUPABASE_*` empty: the dev
-build then talks to `.preview/mock-api.mjs` (`node .preview/mock-api.mjs`, port
-5000, proxied by Vite at `/api`). Production builds refuse to start without
-Supabase rather than silently pointing at a mock.
+build then talks to the bundled mock (`cd frontend && npm run mock` — port 5000,
+proxied by Vite at `/api`). Production builds refuse to start without Supabase
+rather than silently pointing at a mock.
 
 ## 9 · Post-deploy checklist
 

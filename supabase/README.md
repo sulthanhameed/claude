@@ -63,7 +63,8 @@ supabase functions deploy razorpay-webhook
 `config.toml` already carries the per-function JWT setting: the first two
 require a signed-in user, the webhook is public (Razorpay's HMAC is the proof).
 
-Secrets (`supabase secrets set …`):
+Secrets (`supabase secrets set …`, or copy `functions/.env.example` to
+`functions/.env` for `supabase functions serve`):
 
 | secret | what it is |
 |---|---|
@@ -137,3 +138,26 @@ alter publication supabase_realtime add table public.order_tracking;
 then subscribe to `order_tracking` filtered by `order_id` in the frontend. The
 site currently polls on demand instead, which is enough for a 35-minute
 delivery window.
+
+## Checking your work
+
+The frontend has one command for both of its checks:
+
+```bash
+cd frontend && npm run check      # tsc --noEmit, then a production build
+```
+
+The Edge Functions are Deno, so they are checked with Deno rather than with the
+frontend's `tsconfig.json`:
+
+```bash
+deno check supabase/functions/create-order/index.ts \
+           supabase/functions/razorpay/index.ts \
+           supabase/functions/razorpay-webhook/index.ts
+```
+
+They import supabase-js through an `npm:` specifier, which the Deno language
+server resolves on its own. To get editor completion and no phantom errors in
+VS Code, install the **Deno** extension — the repo's `.vscode/settings.json`
+already enables it for `supabase/functions` only, so the browser code keeps
+using the normal TypeScript service.

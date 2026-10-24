@@ -26,3 +26,6 @@ Thumbs.db
 # Supabase CLI scratch
 supabase/.temp/
 supabase/.branches/
+
+# Edge Function secrets for `supabase functions serve`
+supabase/functions/.env

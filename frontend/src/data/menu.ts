@@ -5,7 +5,7 @@ export type Category = "Dim Sum" | "Noodles & Soups" | "Rice & Curry" | "Snacks"
 export interface FoodItem {
   /** Supabase product id when loaded live, or a local fallback id */
   id: string;
-  /** URL slug (only present for API-backed products) */
+  /** URL slug (only present for products loaded from Supabase) */
   slug?: string;
   name: string;
   chineseName: string;

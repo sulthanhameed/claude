@@ -107,6 +107,10 @@ VITE_SUPABASE_URL=https://<ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon public key>
 ```
 
+No project yet? Leave both empty, run `npm run mock` in a second terminal, and the
+dev build uses the bundled in-memory stand-in (menu, signup, COD orders,
+tracking, admin) instead.
+
 ### 3. Edge Functions
 
 ```bash

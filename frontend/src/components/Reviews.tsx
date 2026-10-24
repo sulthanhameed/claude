@@ -49,7 +49,7 @@ export default function Reviews() {
         );
       })
       .catch(() => {
-        /* keep curated reviews when the API is unreachable */
+        /* keep curated reviews when Supabase is unreachable */
       });
   }, []);
 

@@ -13,7 +13,7 @@
  * Returns: { order }
  */
 import { caller, serviceClient } from "../_shared/client.ts";
-import { corsHeaders, json, preflight } from "../_shared/cors.ts";
+import { json, preflight } from "../_shared/cors.ts";
 import { sendOrderEmails, type OrderPayload } from "../_shared/email.ts";
 
 Deno.serve(async (req) => {

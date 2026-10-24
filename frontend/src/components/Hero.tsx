@@ -44,7 +44,7 @@ export default function Hero() {
   const [animating, setAnimating] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
 
-  // Re-seat the showcase when the live menu arrives from the API.
+  // Re-seat the showcase when the live menu arrives from Supabase.
   useEffect(() => {
     setSlotIds(slotsFromPool(pool));
   }, [pool]);

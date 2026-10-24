@@ -11,7 +11,7 @@
  * UI knows nothing about the change of backend.
  *
  * Local preview: if VITE_SUPABASE_URL is not set, a development-only REST
- * driver talks to `/api` (the mock in .preview/mock-api.mjs) so the site can be
+ * driver talks to `/api` (the mock in frontend/mock/server.mjs) so the site can be
  * clicked through without a project. Production builds without Supabase throw
  * a configuration error rather than inventing one.
  */
@@ -577,7 +577,7 @@ const supabaseDriver: Driver = {
 /* ── the local preview driver ───────────────────────────────────────────── */
 /*
  * Only for `npm run dev` without a Supabase project: the same request shapes
- * against `/api`, which .preview/mock-api.mjs answers. It is never bundled
+ * against `/api`, which `npm run mock` answers. It is never bundled
  * into a production build — there, a missing Supabase URL is a hard error.
  */
 

@@ -12,7 +12,7 @@
  *
  * orders.customer_email_sent_at / owner_email_sent_at keep retries idempotent.
  */
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 export const DEFAULT_OWNER_EMAIL = "sultham456@gmail.com";
 

@@ -1,5 +1,5 @@
 /** Supabase clients + caller verification, shared by the Edge Functions. */
-import { createClient, type SupabaseClient, type User } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient, type SupabaseClient, type User } from "npm:@supabase/supabase-js@2";
 
 const URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;

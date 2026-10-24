@@ -16,6 +16,7 @@ frontend/
 ├── vite.config.ts            # dev server + /api proxy for the local mock
 ├── vercel.json               # SPA rewrite + security headers
 ├── public/                   # brand SVGs, _redirects (Netlify)
+├── mock/                     # dev-only REST stand-in for Supabase (npm run mock)
 ├── .env.example
 └── src/
     ├── App.tsx               # providers + section composition + routes
@@ -67,7 +68,7 @@ data. Never put the service-role key here.
 Leave the two values empty and start the local REST mock:
 
 ```bash
-node ../.preview/mock-api.mjs     # :5000, in-memory menu + orders
+npm run mock                      # :5000, in-memory menu + orders
 ```
 
 The dev build then uses its preview driver (`/api` → proxied to :5000 by
@@ -79,9 +80,11 @@ quietly pointing at a mock.
 | Script | Description |
 |---|---|
 | `npm run dev` | Vite dev server on `0.0.0.0:5173` |
+| `npm run mock` | Dev-only REST stand-in for Supabase on `:5000` |
 | `npm run build` | Production build → single `dist/index.html` |
 | `npm run preview` | Preview the production build |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run check` | `typecheck` + a production build, in one go |
 
 ---
 

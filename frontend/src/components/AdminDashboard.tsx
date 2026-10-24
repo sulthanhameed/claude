@@ -104,7 +104,8 @@ export default function AdminDashboard({ open, onClose }: Props) {
                   Admin access required
                 </p>
                 <p className="mt-3 font-body text-sm text-zinc-600">
-                  Sign in as <span className="font-mono">admin@khang.com</span> to access the dashboard.
+                  Sign in with the account the owner promoted to admin — the one-line
+                  SQL lives in <span className="font-mono">supabase/README.md</span>.
                 </p>
               </div>
             ) : (

@@ -72,18 +72,18 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         setLive(true);
         setError(null);
       } else {
-        // Database is reachable but has not been seeded yet.
+        // Postgres answered, but `products` has no rows yet.
         setItems(MENU);
         setLive(false);
-        setError("The kitchen menu is empty. Run `npm run seed` on the backend.");
+        setError("The menu is empty. Apply supabase/seed.sql to the project.");
       }
     } catch (err) {
       setItems(MENU);
       setLive(false);
       setError(
         err instanceof Error
-          ? `Could not reach the kitchen API — ${err.message}`
-          : "Could not reach the kitchen API",
+          ? `Could not load the menu from Supabase — ${err.message}`
+          : "Could not load the menu from Supabase",
       );
     } finally {
       setLoading(false);
