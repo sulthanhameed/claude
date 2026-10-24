@@ -1,0 +1,21 @@
+{
+  "name": "khang",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Khang Chinese Restaurant & Dimsum \u2014 React frontend + Supabase backend",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "check": "npm --prefix frontend run check",
+    "mock": "npm --prefix frontend run mock",
+    "setup:sql": "node scripts/build-setup-sql.mjs",
+    "db:push": "supabase link --project-ref jrfmgqccicrpdtqztrpt && supabase db push",
+    "db:reset": "supabase db reset",
+    "db:types": "npm --prefix frontend run types",
+    "functions:deploy": "supabase functions deploy create-order razorpay razorpay-webhook",
+    "functions:serve": "supabase functions serve --env-file supabase/functions/.env"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

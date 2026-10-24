@@ -35,7 +35,8 @@ frontend/
     │   ├── MenuContext.tsx   # products from Supabase, static fallback
     │   └── CartContext.tsx
     ├── lib/
-    │   ├── supabase.ts       # the client
+    │   ├── supabase.ts       # the client (typed with Database)
+    │   ├── database.types.ts # tables/enums/RPCs as TypeScript (npm run types)
     │   ├── api.ts            # typed data layer over Supabase (+ dev mock)
     │   ├── payments.ts       # order → Razorpay → verify
     │   └── razorpay.ts       # Checkout SDK loader
@@ -85,6 +86,7 @@ quietly pointing at a mock.
 | `npm run preview` | Preview the production build |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run check` | `typecheck` + a production build, in one go |
+| `npm run types` | Regenerate `database.types.ts` from the live project |
 
 ---
 

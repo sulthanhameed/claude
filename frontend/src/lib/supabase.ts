@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
 /**
  * The Supabase client.
@@ -20,8 +21,8 @@ const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? "").trim();
 /** True when this build points at a Supabase project. */
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
-export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(url, anonKey, {
+export const supabase: SupabaseClient<Database> | null = isSupabaseConfigured
+  ? createClient<Database>(url, anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -34,7 +35,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   : null;
 
 /** The client, or a clear error when the build has no Supabase project. */
-export function requireSupabase(): SupabaseClient {
+export function requireSupabase(): SupabaseClient<Database> {
   if (!supabase) {
     throw new Error(
       "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (see supabase/README.md).",

@@ -20,47 +20,50 @@ frontend** (Vercel or Netlify). There is no API server to run.
 
 ---
 
-## 1 · Create the Supabase project
+## 1 · The Supabase project
 
-1. <https://supabase.com/dashboard> → **New project**
-   - Region: **Mumbai (ap-south-1)** for Indian customers, or Singapore.
-   - Save the database password somewhere safe.
-2. **Project Settings → API** → copy:
-   - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** key → `VITE_SUPABASE_ANON_KEY`
-3. **Authentication → Providers → Email** — for a smooth demo, turn
+This repo is wired to **`jrfmgqccicrpdtqztrpt`** —
+<https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>.
+
+1. **Project Settings → API** → copy the **anon public** key into
+   `frontend/.env` (the URL is already the project's).
+2. **Authentication → Providers → Email** — for a smooth demo, turn
    **Confirm email** off. Leave it on for production; the app then tells the
    guest to confirm before signing in.
 
+Making a *new* project instead? Create it, then change the ref in
+`package.json` (`db:push`, `db:types`), `frontend/.env` and `.mcp.json`.
+
 ## 2 · Apply the schema
 
-**Option A — CLI (recommended)**
+**Option A — SQL Editor (one paste)**
+
+Open <https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/sql>, paste
+all of `supabase/setup.sql` and run it. That file is the four migrations in
+order **plus** the seed, so the menu arrives with it.
+
+**Option B — CLI**
 
 ```bash
-npx supabase login
-npx supabase link --project-ref <ref>
-npx supabase db push
+npm run db:push          # supabase link --project-ref jrfmgqccicrpdtqztrpt && db push
 ```
 
-**Option B — SQL Editor**
-
-Run these files, in this order:
-
-1. `supabase/migrations/20261024090000_schema.sql`
-2. `supabase/migrations/20261024090100_functions.sql`
-3. `supabase/migrations/20261024090200_rls.sql`
-4. `supabase/migrations/20261024090300_order_reads.sql`
-5. `supabase/seed.sql`
+`db push` applies the migrations but not the seed on a hosted project — paste
+`supabase/seed.sql` in the SQL Editor afterwards if you use this route.
 
 Verify: **Table Editor** should show `products` with 17 rows, `categories` 5,
 `reviews` 4.
 
+Then generate the TypeScript types the frontend compiles against:
+
+```bash
+npm run db:types
+```
+
 ## 3 · Deploy the Edge Functions
 
 ```bash
-npx supabase functions deploy create-order
-npx supabase functions deploy razorpay
-npx supabase functions deploy razorpay-webhook
+npm run functions:deploy     # create-order, razorpay, razorpay-webhook
 ```
 
 `create-order` and `razorpay` require a signed-in user (JWT verified by the

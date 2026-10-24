@@ -15,6 +15,7 @@
  * clicked through without a project. Production builds without Supabase throw
  * a configuration error rather than inventing one.
  */
+import type { Database } from "./database.types";
 import { isSupabaseConfigured, requireSupabase, supabase } from "./supabase";
 
 /* ── errors ─────────────────────────────────────────────────────────────── */
@@ -213,41 +214,19 @@ interface Driver {
 
 /* ── row → app shape ────────────────────────────────────────────────────── */
 
-interface ProductRow {
-  id: string;
-  slug: string;
-  name: string;
-  chinese_name: string | null;
-  category: string;
-  price: number;
-  description: string;
-  ingredients: string[] | null;
-  image: string;
-  rating: number | string;
-  reviews_count: number;
-  spicy: number | null;
-  veg: boolean;
-  featured: boolean;
-  prep_time: string | null;
-  in_stock: boolean;
-}
+/**
+ * The row shapes come straight from the generated schema types, so a column
+ * that is renamed in `supabase/migrations/` breaks the build here instead of
+ * failing at runtime.
+ */
+type Tables = Database["public"]["Tables"];
 
-interface ReviewRow {
-  id: string;
-  rating: number;
-  body: string;
-  user_name: string | null;
-  location: string | null;
-  created_at: string;
-}
-
-interface ProfileRow {
-  id: string;
-  name: string;
-  phone: string | null;
-  role: "user" | "admin";
-  created_at: string;
-}
+type ProductRow = Tables["products"]["Row"];
+type ReviewRow = Pick<
+  Tables["reviews"]["Row"],
+  "id" | "rating" | "body" | "user_name" | "location" | "created_at"
+>;
+type ProfileRow = Pick<Tables["profiles"]["Row"], "id" | "name" | "phone" | "role" | "created_at">;
 
 function toProduct(row: ProductRow): KhangProduct {
   return {
@@ -400,7 +379,8 @@ const supabaseDriver: Driver = {
       const id = sessionData.session?.user.id;
       if (!id) throw new ApiError("Please sign in again", 401);
 
-      const patch: Record<string, string> = {};
+      // DB-typed so the client can check the column names against the schema
+      const patch: Database["public"]["Tables"]["profiles"]["Update"] = {};
       if (typeof body.name === "string" && body.name.trim()) patch.name = body.name.trim();
       if (typeof body.phone === "string") patch.phone = body.phone.trim();
 
