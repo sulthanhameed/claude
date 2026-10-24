@@ -1,8 +1,8 @@
 # 🎨 Khang Frontend
 
-> React 19 · TypeScript · Vite 7 · Tailwind CSS v4 — the customer-facing restaurant app.
-> Talks to the Express API over REST, opens Razorpay Checkout, and uses MongoDB
-> product ids for a real cart and checkout.
+> React 19 · TypeScript · Vite 7 · Tailwind CSS v4 — the customer-facing
+> restaurant app. Talks to **Supabase** (Postgres + Auth + Edge Functions),
+> opens Razorpay Checkout, and uses real product ids for a real cart.
 
 ---
 
@@ -12,37 +12,33 @@
 frontend/
 ├── index.html
 ├── package.json
-├── package-lock.json
 ├── tsconfig.json
-├── vite.config.ts            # dev proxy /api → localhost:5000
-├── vercel.json               # one-click Vercel deploy
+├── vite.config.ts            # dev server + /api proxy for the local mock
+├── vercel.json               # SPA rewrite + security headers
+├── public/                   # brand SVGs, _redirects (Netlify)
 ├── .env.example
 └── src/
-    ├── App.tsx               # providers + section composition
+    ├── App.tsx               # providers + section composition + routes
     ├── main.tsx
-    ├── index.css             # Tailwind v4 theme tokens
+    ├── index.css             # Tailwind v4 theme tokens + intro styles
     ├── components/           # 25 UI components
-    │   ├── Navbar.tsx / Hero.tsx / FeaturedCarousel.tsx
-    │   ├── MenuSection.tsx   # live menu from MongoDB
-    │   ├── FoodCard.tsx / FoodDetailModal.tsx
-    │   ├── CartDrawer.tsx
-    │   ├── CheckoutModal.tsx # Razorpay + COD, real order creation
-    │   ├── AuthModal.tsx / UserMenu.tsx
-    │   ├── MyOrdersModal.tsx # order history (/orders/me)
-    │   ├── OrderTracking.tsx # live status (/orders/track/:id)
-    │   ├── AdminDashboard.tsx
-    │   ├── SearchModal.tsx
-    │   ├── Reviews.tsx / Footer.tsx (newsletter API)
-    │   └── …
+    │   ├── Navbar / Hero / FeaturedCarousel / MenuSection
+    │   ├── FoodCard / FoodDetailModal / CartDrawer
+    │   ├── CheckoutModal     # Razorpay + COD through the Edge Functions
+    │   ├── AuthModal / UserMenu
+    │   ├── MyOrdersModal / OrderTracking / AdminDashboard
+    │   ├── SearchModal / Reviews / Footer
+    │   └── intro/            # the entrance film (diner, brand clip, /brand)
     ├── context/
-    │   ├── AuthContext.tsx   # JWT + session validation
-    │   ├── MenuContext.tsx   # products from REST, static fallback
+    │   ├── AuthContext.tsx   # Supabase session + profile
+    │   ├── MenuContext.tsx   # products from Supabase, static fallback
     │   └── CartContext.tsx
     ├── lib/
-    │   ├── api.ts            # typed REST client
-    │   ├── payments.ts       # create order → Razorpay → verify
-    │   └── razorpay.ts       # SDK loader
-    ├── data/menu.ts          # fallback menu (used only if API is down)
+    │   ├── supabase.ts       # the client
+    │   ├── api.ts            # typed data layer over Supabase (+ dev mock)
+    │   ├── payments.ts       # order → Razorpay → verify
+    │   └── razorpay.ts       # Checkout SDK loader
+    ├── data/menu.ts          # fallback menu (used only if the project is down)
     ├── hooks/useScrollReveal.ts
     └── utils/cn.ts
 ```
@@ -53,15 +49,30 @@ frontend/
 
 ```bash
 cd frontend
-cp .env.example .env
+cp .env.example .env        # fill in the two Supabase values
 npm install
-npm run dev            # → http://localhost:5173
+npm run dev                 # → http://localhost:5173
 ```
 
-The dev server proxies `/api` to `http://localhost:5000`, so **no CORS setup is
-needed** and `VITE_API_URL` can stay `/api`.
+```env
+VITE_SUPABASE_URL=https://<ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
 
-Start the backend first (see [`../backend/README.md`](../backend/README.md)).
+The anon key is designed for browsers — row level security is what protects the
+data. Never put the service-role key here.
+
+### Running without a Supabase project
+
+Leave the two values empty and start the local REST mock:
+
+```bash
+node ../.preview/mock-api.mjs     # :5000, in-memory menu + orders
+```
+
+The dev build then uses its preview driver (`/api` → proxied to :5000 by
+`vite.config.ts`). Production builds refuse to run without Supabase rather than
+quietly pointing at a mock.
 
 ### Scripts
 
@@ -74,102 +85,38 @@ Start the backend first (see [`../backend/README.md`](../backend/README.md)).
 
 ---
 
-## 🔧 Environment variables
+## 🔌 Where each feature gets its data
 
-```env
-# Local default — Vite proxy handles the backend
-VITE_API_URL=/api
-VITE_PROXY_TARGET=http://localhost:5000
+| Feature | Supabase object |
+|---|---|
+| Menu | `products` (select; RLS: public) |
+| Search / filter / sort | query on `products` |
+| Signup / login | `auth.signUp` / `auth.signInWithPassword` |
+| Session | Supabase session + `profiles` row |
+| Checkout | Edge Function `create-order` |
+| Payment | Edge Function `razorpay` (create / verify) |
+| Order history | RPC `my_orders()` |
+| Live tracking | RPC `track_order(orderId)` (30 s auto-refresh) |
+| Reviews | `reviews` (select) |
+| Newsletter | RPC `subscribe_newsletter(email)` |
+| Admin | RPC `admin_list_orders()`, `admin_set_order_status()` |
 
-# Production (set in Vercel / Netlify dashboard)
-# VITE_API_URL=https://khang-api.onrender.com/api
-```
+### Behaviour when the backend is unreachable
 
-`VITE_*` values are baked in at build time — redeploy after changing them.
-
----
-
-## 🔌 Backend integration
-
-| Feature | Source | Endpoint |
-|---|---|---|
-| Menu | MongoDB | `GET /products` |
-| Search | Local filter of live products | — |
-| Signup / login | MongoDB `users` | `POST /auth/signup`, `/auth/login` |
-| Session | JWT in `localStorage` | `GET /auth/me` |
-| Cart | Client state, product `_id` as key | — |
-| Checkout | Express | `POST /orders` |
-| Payment | Razorpay Checkout | `POST /payments/razorpay/create-order` + `/verify` |
-| Order history | MongoDB `orders` | `GET /orders/me` |
-| Live tracking | MongoDB `orders` | `GET /orders/track/:orderId` (30s auto-refresh) |
-| Reviews | MongoDB `reviews` | `GET /reviews` |
-| Newsletter | MongoDB `subscribers` | `POST /newsletter` |
-| Admin | Admin JWT | `GET /orders`, `PUT /orders/:id/status` |
-
-### Behaviour when the API is down
-
-- The menu falls back to a curated static list for browsing.
-- The checkout button is **disabled** with a retry prompt — fake orders are never
-  shown and nothing is written to the database.
-- Sign-in fails with a clear error instead of creating a fake local session.
-- A banner appears in the menu section with the connection error.
+- The menu falls back to the curated list for browsing.
+- Checkout is **disabled** with a retry prompt — fake orders are never written.
+- Sign-in fails with a clear error rather than creating a fake session.
+- The menu section shows the connection error.
 
 ---
 
-## 💳 Checkout flow
+## 🎬 The entrance
 
-```
-Cart (MongoDB _id + qty)
-   ↓
-POST /api/orders                      ← signed-in user required
-   ↓  order KH-2026-XXXX (payment pending)
-COD?  → success screen + emails
-   ↓  otherwise
-POST /api/payments/razorpay/create-order
-   ↓  Razorpay Checkout popup (UPI / card / wallet / netbanking)
-POST /api/payments/razorpay/verify   ← HMAC verified by the backend
-   ↓
-Success screen with order id + confirmation email destination
-   ↓
-OrderTracking section auto-loads the new order
-```
+`components/intro/` holds the whole opening sequence:
 
-The confirmation email always goes to the **account email stored in MongoDB**,
-and the restaurant owner receives a copy at `ORDER_NOTIFY_EMAIL`
-(default `sultham456@gmail.com`).
-
----
-
-## 🎨 Build & deploy
-
-```bash
-npm run build
-# dist/index.html — ~105 KB gzipped, CSS + JS inlined
-```
-
-### Vercel
-
-1. Import the repo
-2. **Root Directory:** `frontend`
-3. Framework preset: **Vite**
-4. Env: `VITE_API_URL=https://<your-render-api>/api`
-5. Deploy (`vercel.json` already contains SPA rewrites + security headers)
-
-Any static host works — upload the `dist/` folder.
-
----
-
-## 🧪 Testing checklist
-
-- [ ] Menu loads with 17 dishes from the API (not fallback)
-- [ ] Signup stores the email in `users`; duplicate email returns 409
-- [ ] Cart uses MongoDB product ids (check DevTools → Network → `POST /orders`)
-- [ ] Razorpay test card `4111 1111 1111 1111` / OTP `1234` completes
-- [ ] Confirmation appears at `sultham456@gmail.com`
-- [ ] Tracking shows real statuses; admin can advance them
-- [ ] Newsletter subscription appears in the `subscribers` collection
-- [ ] Mobile layout, search, cart drawer and admin dashboard work
-
----
-
-MIT © Khang
+- `IntroScene` — the traced diner, eating, on plain white (no room, no props).
+- `IntroExperience` — the 8.85 s entrance: the meal, a dissolve, then the brand
+  clip, then the hand-off to the page. Plays once per session (`?intro=1`
+  replays, `?intro=0` skips), and reduced-motion visitors get the held frame.
+- `BrandFilmPage` — the same name-and-logo clip on its own page at **`/brand`**,
+  with Replay and “Enter the restaurant”.

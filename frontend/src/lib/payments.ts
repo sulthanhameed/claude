@@ -1,10 +1,11 @@
 /**
  * Checkout orchestrator.
  *
- *   1. POST /orders            → creates a pending order (server recalculates totals)
- *   2. COD                     → done, confirmation emails are sent by the API
- *   3. UPI / Card / Wallet     → Razorpay Checkout popup
- *   4. POST /payments/verify   → HMAC signature check, order marked paid
+ *   1. create-order Edge Function → an order priced by Postgres, not the browser
+ *   2. COD                        → done; the function sends the two emails
+ *   3. UPI / Card / Wallet        → Razorpay Checkout popup
+ *   4. razorpay (verify)          → HMAC signature check, order marked paid,
+ *                                   receipt + kitchen copy sent
  */
 import { ordersApi, paymentsApi, type CreateOrderBody } from "./api";
 import { openRazorpayCheckout } from "./razorpay";
@@ -19,8 +20,8 @@ export interface PaymentResult {
 
 export async function runCheckout(body: CreateOrderBody): Promise<PaymentResult> {
   try {
-    // 1. Create the order on the backend. Totals and customer email are
-    //    derived server-side — never from the browser.
+    // 1. Create the order. Totals and customer email are derived server-side
+    //    — never from the browser.
     const { order } = await ordersApi.create(body);
 
     // 2. Cash on delivery — order is confirmed immediately.

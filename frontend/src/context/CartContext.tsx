@@ -70,7 +70,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
-  // The first paint uses a static fallback menu. When the real MongoDB menu
+  // The first paint uses a static fallback menu. When the real menu
   // arrives, drop any fallback-only lines so checkout always sends valid ids.
   useEffect(() => {
     if (!live) return;

@@ -30,7 +30,7 @@ const slotsFromPool = (pool: FoodItem[]): Record<Slot, string> => ({
 export default function Hero() {
   const { items } = useMenu();
 
-  // Top 5 featured dishes for the showcase — live from the MongoDB menu.
+  // Top 5 featured dishes for the showcase — live from Supabase.
   const pool = useMemo(() => {
     const featured = items.filter((m) => m.featured);
     const base = featured.length >= 5 ? featured : items;

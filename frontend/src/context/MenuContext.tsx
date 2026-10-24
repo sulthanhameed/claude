@@ -11,11 +11,11 @@ import { productsApi, type KhangProduct } from "../lib/api";
 import { MENU, type Category, type FoodItem } from "../data/menu";
 
 /**
- * Loads the live menu from the Express + MongoDB backend.
+ * Loads the live menu from Supabase (`products`).
  *
  * The static `MENU` in `src/data/menu.ts` is only a visual fallback for when
- * the API cannot be reached. Cart + checkout require `live === true` because
- * orders must reference real MongoDB product ids.
+ * the project cannot be reached. Cart + checkout require `live === true`
+ * because an order must reference real product ids.
  */
 interface MenuContextValue {
   items: FoodItem[];

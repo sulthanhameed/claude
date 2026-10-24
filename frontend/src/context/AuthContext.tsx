@@ -154,6 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     persist(null);
     clearToken();
+    // With Supabase this ends the auth session as well, so a reload cannot
+    // resurrect it from the client's own storage.
+    void authApi.logout();
   }, [persist]);
 
   return (

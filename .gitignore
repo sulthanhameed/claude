@@ -11,7 +11,6 @@ coverage/
 .env.local
 .env.*.local
 .env.production
-backend/.env
 frontend/.env
 
 # Logs & OS files
@@ -23,3 +22,7 @@ Thumbs.db
 # Tooling
 .vite/
 *.tsbuildinfo
+
+# Supabase CLI scratch
+supabase/.temp/
+supabase/.branches/

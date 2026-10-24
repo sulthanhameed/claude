@@ -3,7 +3,7 @@
 export type Category = "Dim Sum" | "Noodles & Soups" | "Rice & Curry" | "Snacks" | "Drinks";
 
 export interface FoodItem {
-  /** MongoDB product _id when loaded from the API, or a local fallback id */
+  /** Supabase product id when loaded live, or a local fallback id */
   id: string;
   /** URL slug (only present for API-backed products) */
   slug?: string;
