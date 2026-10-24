@@ -53,7 +53,7 @@ that need secrets (pricing + email, and Razorpay) run in Edge Functions.
 | Live order tracking with 30 s refresh | ✅ |
 | Order history (“My Orders”) | ✅ |
 | Admin dashboard — orders, revenue, status updates | ✅ |
-| Refund (admin, via the `razorpay` function) | ✅ |
+| Refund action on the `razorpay` function (admin call; no dashboard button yet) | ✅ |
 | Newsletter signup stored in `newsletter_subscribers` | ✅ |
 | Reviews from Postgres (curated fallback) | ✅ |
 | Row level security on every table | ✅ |
