@@ -43,7 +43,8 @@ begin
     raise exception 'Order not found' using errcode = 'P0001';
   end if;
 
-  if v_order.user_id <> auth.uid() and not public.is_admin() then
+  -- `is distinct from` also stops a row with no owner leaking to anyone
+  if v_order.user_id is distinct from auth.uid() and not public.is_admin() then
     raise exception 'Order not found' using errcode = 'P0001';
   end if;
 

@@ -57,18 +57,30 @@ on conflict (slug) do update set
 
 insert into public.reviews (product_id, rating, body, user_name, location, verified)
 select p.id, v.rating, v.body, v.user_name, v.location, true
-  from public.products p
-  join (values
+  from (values
     ('khang-special-veg-momo', 5, 'The momos are the best I have had outside of Kolkata. Steamed perfectly, and that schezwan dip is dangerous.', 'Ananya R.', 'Madurai'),
     ('chicken-dimsum-basket', 5, 'Ordered for a small birthday dinner — everything arrived hot, and the hargao looked hand-pleated. Lovely.', 'Vikram S.', 'Chennai'),
     ('crystal-prawn-hargao', 4, 'Solid dim sum and generous portions. Delivery took a little longer than promised but the food was worth it.', 'Meera K.', 'Madurai'),
     ('chilli-chicken-gravy', 5, 'The chilli chicken gravy with steamed rice is my weekly order now. Proper heat, not just colour.', 'Rahul D.', 'Coimbatore')
-  ) as v(slug, rating, body, user_name, location) on false
-where p.slug = v.slug
-  and not exists (
+  ) as v(slug, rating, body, user_name, location)
+  join public.products p on p.slug = v.slug
+ where not exists (
     select 1 from public.reviews r
      where r.product_id = p.id and r.user_name = v.user_name
   );
+
+-- The rating trigger fires while the house reviews are inserted, so put the
+-- curated totals back on those four dishes. Customer reviews written later keep
+-- updating them from real rows.
+update public.products p
+   set rating = v.rating, reviews_count = v.total
+  from (values
+    ('khang-special-veg-momo', 4.8, 412),
+    ('chicken-dimsum-basket', 4.9, 587),
+    ('crystal-prawn-hargao', 4.9, 246),
+    ('chilli-chicken-gravy', 4.8, 511)
+  ) as v(slug, rating, total)
+ where p.slug = v.slug;
 
 -- ── the newsletter list starts empty ────────────────────────────────────
 -- (subscribers arrive through subscribe_newsletter())

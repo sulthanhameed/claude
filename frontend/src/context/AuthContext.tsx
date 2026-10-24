@@ -14,6 +14,7 @@ import {
   setToken,
   type KhangUser,
 } from "../lib/api";
+import { supabase } from "../lib/supabase";
 
 export interface User {
   id: string;
@@ -77,29 +78,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // On reload: validate the saved token against the API so a deleted user or
-  // expired JWT cannot keep a fake session alive.
+  // On reload: validate the saved token against the backend so a deleted user
+  // or an expired session cannot keep a fake login alive.
   useEffect(() => {
-    const cached = readCachedUser();
-    const token = getToken();
+    let alive = true;
 
-    if (!token) {
-      setUser(null);
-      persist(null);
-      setCheckingSession(false);
-      return;
-    }
+    (async () => {
+      // With Supabase the real session lives in the client's own storage, so
+      // the app's token is only a mirror — recover it when the mirror is gone.
+      let token = getToken();
+      if (!token && supabase) {
+        const { data } = await supabase.auth.getSession();
+        token = data.session?.access_token ?? null;
+        if (token) setToken(token);
+      }
+      if (!alive) return;
 
-    if (cached) setUser(cached);
+      if (!token) {
+        setUser(null);
+        persist(null);
+        setCheckingSession(false);
+        return;
+      }
 
-    authApi
-      .me()
-      .then(({ user: fresh }) => {
+      const cached = readCachedUser();
+      if (cached) setUser(cached);
+
+      try {
+        const { user: fresh } = await authApi.me();
+        if (!alive) return;
         const u = toUser(fresh);
         setUser(u);
         persist(u);
-      })
-      .catch((err: unknown) => {
+      } catch (err: unknown) {
         // Only sign out on a genuine auth failure — keep the cached session
         // during a temporary network outage.
         if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
@@ -107,8 +118,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           persist(null);
           setUser(null);
         }
-      })
-      .finally(() => setCheckingSession(false));
+      } finally {
+        if (alive) setCheckingSession(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, [persist]);
 
   const openAuth = useCallback((mode: "login" | "signup" = "login") => {

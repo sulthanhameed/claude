@@ -4,8 +4,8 @@ The restaurant runs on Supabase: **Postgres** for the data, **Supabase Auth**
 for accounts, and three **Edge Functions** for the operations that must not
 happen in a browser (pricing + email, Razorpay, and the payment webhook).
 
-There is no Express server and no Render service any more — nothing to keep
-awake, nothing to scale by hand.
+There is no separate application server to deploy, keep awake or scale by
+hand: the database, the accounts and the server-side logic are one service.
 
 ```
 supabase/

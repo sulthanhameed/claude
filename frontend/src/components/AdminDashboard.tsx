@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CloseIcon } from "./Icons";
-import { ordersApi, type OrderStatus } from "../lib/api";
+import { BACKEND, ordersApi, type OrderStatus } from "../lib/api";
 
 interface AdminOrder {
   _id: string;
@@ -83,6 +83,11 @@ export default function AdminDashboard({ open, onClose }: Props) {
                 <h2 className="mt-2 font-brush text-3xl font-medium tracking-tight">
                   Order Dashboard
                 </h2>
+                {BACKEND !== "supabase" && (
+                  <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-300">
+                    {BACKEND === "preview" ? "Preview data · local mock" : "Supabase not configured"}
+                  </p>
+                )}
               </div>
               <button
                 onClick={onClose}

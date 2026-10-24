@@ -41,8 +41,20 @@ export const getToken = () => {
     return null;
   }
 };
-export const setToken = (token: string) => localStorage.setItem(TOKEN_KEY, token);
-export const clearToken = () => localStorage.removeItem(TOKEN_KEY);
+export const setToken = (token: string) => {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    /* storage disabled — the in-memory session still works */
+  }
+};
+export const clearToken = () => {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    /* nothing to clear */
+  }
+};
 
 /* ── types ──────────────────────────────────────────────────────────────── */
 
@@ -607,6 +619,10 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
       res.status,
     );
   }
+
+  // signup/login answer with the session token; keep it for the calls after
+  if (typeof data.token === "string" && data.token) setToken(data.token);
+
   return data as T;
 }
 
@@ -616,7 +632,9 @@ const previewDriver: Driver = {
     login: (body) => request("/auth/login", { method: "POST", body }),
     me: () => request("/auth/me"),
     updateMe: (body) => request("/auth/me", { method: "PUT", body }),
-    logout: async () => {},
+    logout: async () => {
+      clearToken();
+    },
   },
   productsApi: {
     list: (params = {}) => {

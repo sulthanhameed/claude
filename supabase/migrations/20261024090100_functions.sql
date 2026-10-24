@@ -364,7 +364,8 @@ begin
     raise exception 'Admins only' using errcode = '42501';
   end if;
 
-  if p_status not in ('received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled') then
+  if p_status is null
+     or p_status not in ('received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled') then
     raise exception 'Unknown status' using errcode = 'P0001';
   end if;
 

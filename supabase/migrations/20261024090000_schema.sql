@@ -1,9 +1,9 @@
 -- ============================================================================
 --  Khang Chinese Restaurant & Dimsum — schema
 --
---  Postgres for Supabase. This replaces the old MongoDB/Mongoose models:
---  every collection becomes a table, every enum becomes a Postgres type, and
---  the document arrays (order items, tracking events) become child tables.
+--  Postgres for Supabase: every list becomes a table, every fixed set becomes
+--  a Postgres enum, and the two arrays an order used to carry (its lines and
+--  its tracking events) become child tables that can be queried on their own.
 --
 --  Money is stored in whole rupees (integers), matching the menu and the UI.
 -- ============================================================================
