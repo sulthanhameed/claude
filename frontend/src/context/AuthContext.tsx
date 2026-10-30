@@ -74,8 +74,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
   const persist = useCallback((u: User | null) => {
-    if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    else localStorage.removeItem(STORAGE_KEY);
+    // Wrapped because this runs inside login/signup/logout: a storage failure
+    // must not abort those flows. On logout in particular, throwing here would
+    // skip clearToken() and the Supabase sign-out, leaving a session that comes
+    // back on the next reload.
+    try {
+      if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* storage unavailable — the in-memory session still works */
+    }
   }, []);
 
   // On reload: validate the saved token against the backend so a deleted user

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import IntroBrandTitle from "./IntroBrandTitle";
-import { BRAND_DURATION } from "./introBrand";
+import IntroBrandTitle from "../components/intro/IntroBrandTitle";
+import { BRAND_DURATION } from "../components/intro/introBrand";
 
 /* ─────────────────────────────────────────────────────────────────────────
    The brand film's own page.
@@ -9,14 +9,6 @@ import { BRAND_DURATION } from "./introBrand";
    here now, on a white page of its own, the way a film plays in a room by
    itself. The clip plays once and holds its last frame; Replay runs it again.
    ───────────────────────────────────────────────────────────────────────── */
-
-/** True at `/brand` (or `?intro=brand`, which older links still use). */
-export function isBrandFilmRoute(): boolean {
-  if (typeof window === "undefined") return false;
-  const path = window.location.pathname.replace(/\/+$/, "");
-  if (path === "/brand" || path.endsWith("/brand")) return true;
-  return new URLSearchParams(window.location.search).get("intro") === "brand";
-}
 
 export default function BrandFilmPage() {
   const reduced = useMemo(() => {

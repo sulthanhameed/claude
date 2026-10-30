@@ -3,6 +3,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useMenu } from "../context/MenuContext";
 import { CheckIcon, CloseIcon } from "./Icons";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface Props {
   open: boolean;
@@ -44,14 +45,10 @@ export default function CheckoutModal({ open, onClose }: Props) {
         name: user?.name || prev.name,
         phone: user?.phone || prev.phone,
       }));
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [open, user]);
+
+  useBodyScrollLock(open);
 
   if (!open) return null;
 
@@ -85,7 +82,14 @@ export default function CheckoutModal({ open, onClose }: Props) {
       if (result.success && result.orderId) {
         setOrderId(result.orderId);
         setPaidTotal(result.total ?? total);
-        localStorage.setItem("khang_last_order", result.orderId);
+        // The order is already placed (and, for Razorpay, already paid). A
+        // storage failure here must never reach the catch below and report the
+        // checkout as failed — that invites a retry and a duplicate charge.
+        try {
+          localStorage.setItem("khang_last_order", result.orderId);
+        } catch {
+          /* storage blocked or full — the success screen still shows the id */
+        }
         window.dispatchEvent(
           new CustomEvent("khang:order-created", {
             detail: result.orderId,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ordersApi, type KhangOrder } from "../lib/api";
 import { CloseIcon } from "./Icons";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface Props {
   open: boolean;
@@ -25,8 +26,6 @@ export default function MyOrdersModal({ open, onClose }: Props) {
   useEffect(() => {
     if (!open) return;
 
-    document.body.style.overflow = "hidden";
-
     if (user) {
       setLoading(true);
       setError(null);
@@ -41,10 +40,9 @@ export default function MyOrdersModal({ open, onClose }: Props) {
         .finally(() => setLoading(false));
     }
 
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [open, user]);
+
+  useBodyScrollLock(open);
 
   if (!open) return null;
 

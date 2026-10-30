@@ -3,6 +3,7 @@ import { CartIcon, MenuIcon, SearchIcon, CloseIcon } from "./Icons";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import UserMenu from "./UserMenu";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -48,12 +49,7 @@ export default function Navbar({ onSearch, onOpenAdmin, onOpenOrders }: Props) {
   }, []);
 
   // Lock body scroll when mobile menu open
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
+  useBodyScrollLock(mobileOpen);
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,

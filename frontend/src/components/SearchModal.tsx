@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FoodItem } from "../data/menu";
 import { useMenu } from "../context/MenuContext";
 import { CloseIcon, SearchIcon, StarIcon } from "./Icons";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface Props {
   open: boolean;
@@ -14,16 +15,10 @@ export default function SearchModal({ open, onClose, onPick }: Props) {
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    if (open) {
-      setQ("");
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (open) setQ("");
   }, [open]);
+
+  useBodyScrollLock(open);
 
   const results = useMemo(() => {
     if (!q.trim()) return items.slice(0, 6);

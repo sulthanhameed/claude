@@ -41,17 +41,37 @@ export function loadRazorpay(): Promise<void> {
   if (loaded) return Promise.resolve();
   if (loading) return loading;
 
-  loading = new Promise((resolve, reject) => {
+  loading = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
+
+    // A failed attempt must not be cached: `loading` is cleared before the
+    // rejection is delivered, so the next call starts a fresh request. Without
+    // this one offline moment (or an ad-blocker, or a strict CSP) would make
+    // every online payment fail for the rest of the session.
+    const fail = (error: Error) => {
+      loading = null;
+      script.remove();
+      reject(error);
+    };
+
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     script.onload = () => {
+      // The file can load and still not define the constructor (an intercepted
+      // or corrupted response). Retrying is useless in that case, so say so.
+      if (typeof window.Razorpay !== "function") {
+        loaded = false;
+        fail(new Error("Razorpay SDK loaded but did not initialise"));
+        return;
+      }
       loaded = true;
       resolve();
     };
-    script.onerror = () => reject(new Error("Razorpay SDK failed to load"));
+    script.onerror = () => fail(new Error("Razorpay SDK failed to load"));
+
     document.body.appendChild(script);
   });
+
   return loading;
 }
 
