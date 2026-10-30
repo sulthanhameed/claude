@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CloseIcon } from "./Icons";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 export default function AuthModal() {
   const { isAuthOpen, authMode, setAuthMode, closeAuth, login, signup } =
@@ -20,14 +21,10 @@ export default function AuthModal() {
     if (isAuthOpen) {
       setError(null);
       setForm({ name: "", email: "", phone: "", password: "", remember: true });
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [isAuthOpen, authMode]);
+
+  useBodyScrollLock(isAuthOpen);
 
   if (!isAuthOpen) return null;
 

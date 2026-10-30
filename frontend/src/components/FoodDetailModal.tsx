@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FoodItem } from "../data/menu";
 import { useCart } from "../context/CartContext";
 import { CloseIcon, FlameIcon, MinusIcon, PlusIcon, StarIcon } from "./Icons";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface Props {
   item: FoodItem | null;
@@ -14,11 +15,9 @@ export default function FoodDetailModal({ item, onClose }: Props) {
 
   useEffect(() => {
     setQty(1);
-    if (item) document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
   }, [item]);
+
+  useBodyScrollLock(Boolean(item));
 
   if (!item) return null;
 

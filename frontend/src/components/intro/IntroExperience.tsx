@@ -9,6 +9,7 @@ import {
   SCENE_FADE,
 } from "./introBrand";
 import { INTRO_SEEN_KEY, frameAt, smoothstep, type IntroFrame } from "./introTimeline";
+import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
 
 export function shouldPlayIntro(): boolean {
   if (typeof window === "undefined") return false;
@@ -92,15 +93,9 @@ export default function IntroExperience({ onDone }: Props) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // Lock page scroll behind the overlay.
-  useEffect(() => {
-    const { body } = document;
-    const previous = body.style.overflow;
-    body.style.overflow = "hidden";
-    return () => {
-      body.style.overflow = previous;
-    };
-  }, []);
+  // Lock page scroll behind the overlay (shared counter, so it composes with
+  // any dialog that opens later).
+  useBodyScrollLock(true);
 
   useEffect(() => {
     const node = stageRef.current;

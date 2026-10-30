@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { CloseIcon } from "./Icons";
 import { BACKEND, ordersApi, type OrderStatus } from "../lib/api";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 
 interface AdminOrder {
   _id: string;
@@ -26,13 +27,7 @@ export default function AdminDashboard({ open, onClose }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open || user?.role !== "admin") return;
