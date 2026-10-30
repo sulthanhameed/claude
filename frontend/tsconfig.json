@@ -15,10 +15,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping — mirrors the "@" alias in vite.config.ts.
+       "baseUrl" is gone: TypeScript 7 removed it, and "paths" no longer needs
+       it. Targets must be relative ("./src/*"), which TS 7 requires. */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     /* Linting */
