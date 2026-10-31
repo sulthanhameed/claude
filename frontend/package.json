@@ -11,7 +11,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run build",
-    "types": "npx supabase gen types typescript --project-id jrfmgqccicrpdtqztrpt > src/lib/database.types.ts"
+    "types": "npx supabase gen types typescript --project-id nnyokeivsnvbbxzfqexf > src/lib/database.types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

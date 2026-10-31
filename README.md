@@ -30,8 +30,8 @@ row level security decides what each request may see — and the three operation
 that need secrets (pricing + email, Razorpay, the payment webhook) run in Edge
 Functions.
 
-The project is **`jrfmgqccicrpdtqztrpt`** ·
-<https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>.
+The project is **`nnyokeivsnvbbxzfqexf`** ·
+<https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf>.
 
 ### Commands (from the repo root)
 
@@ -95,11 +95,11 @@ must reference real product ids.
 
 ## 🚀 Quick start
 
-### 1. Supabase — project `jrfmgqccicrpdtqztrpt`
+### 1. Supabase — project `nnyokeivsnvbbxzfqexf`
 
 ```bash
 # database (migrations in order)
-npm run db:push            # link --project-ref jrfmgqccicrpdtqztrpt + db push
+npm run db:push            # link --project-ref nnyokeivsnvbbxzfqexf + db push
 
 # …or, without the CLI: paste supabase/setup.sql into the SQL Editor
 #     (dashboard → SQL editor → New query → Run) — migrations + seed in one file
@@ -112,7 +112,7 @@ npm run functions:deploy   # create-order, razorpay, razorpay-webhook
 ```
 
 Full walkthrough: [`supabase/README.md`](./supabase/README.md) ·
-Dashboard: <https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>
+Dashboard: <https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf>
 
 ### 2. Frontend
 
@@ -124,7 +124,7 @@ npm run dev               # http://localhost:5173
 ```
 
 ```env
-VITE_SUPABASE_URL=https://jrfmgqccicrpdtqztrpt.supabase.co
+VITE_SUPABASE_URL=https://nnyokeivsnvbbxzfqexf.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon public key from Project Settings → API>
 ```
 
