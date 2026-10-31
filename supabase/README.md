@@ -28,13 +28,13 @@ supabase/
 
 | | |
 |---|---|
-| Project ref | `jrfmgqccicrpdtqztrpt` |
-| API URL | `https://jrfmgqccicrpdtqztrpt.supabase.co` |
-| [Overview](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt) · [Table editor](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/editor) · [SQL editor](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/sql) | [Database](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/database/schemas) · [Auth](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/auth/users) · [Functions](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/functions) · [Advisors](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/advisors/security) |
+| Project ref | `nnyokeivsnvbbxzfqexf` |
+| API URL | `https://nnyokeivsnvbbxzfqexf.supabase.co` |
+| [Overview](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf) · [Table editor](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/editor) · [SQL editor](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/sql) | [Database](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/database/schemas) · [Auth](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/auth/users) · [Functions](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/functions) · [Advisors](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/advisors/security) |
 
 ### 1a. Put the database in it — paste route
 
-1. Open the [SQL editor](https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/sql)
+1. Open the [SQL editor](https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/sql)
    → **New query**.
 2. Paste **all of [`setup.sql`](./setup.sql)** → **Run**.
 
@@ -45,7 +45,7 @@ functions, RLS everywhere, then 5 categories / 17 dishes / 4 reviews. Check
 ### 1b. Put the database in it — CLI route
 
 ```bash
-npm run db:push          # supabase link --project-ref jrfmgqccicrpdtqztrpt && supabase db push
+npm run db:push          # supabase link --project-ref nnyokeivsnvbbxzfqexf && supabase db push
 ```
 
 `db:push` links this project and applies `migrations/` in order. The seed is
@@ -58,7 +58,7 @@ or run `supabase db reset` against the local stack.
 `frontend/.env`:
 
 ```env
-VITE_SUPABASE_URL=https://jrfmgqccicrpdtqztrpt.supabase.co
+VITE_SUPABASE_URL=https://nnyokeivsnvbbxzfqexf.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon public key>
 ```
 
@@ -79,7 +79,7 @@ connection string from **Project Settings → Database → Connection string**
 (use the **pooler**, port 6543, for serverless clients):
 
 ```
-postgresql://postgres.jrfmgqccicrpdtqztrpt:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+postgresql://postgres.nnyokeivsnvbbxzfqexf:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
 ```
 
 The password is the one set when the project was created. Tables live in
@@ -93,7 +93,7 @@ The password is the one set when the project was created. Tables live in
 the schema changes:
 
 ```bash
-npm run db:types        # supabase gen types typescript --project-id jrfmgqccicrpdtqztrpt
+npm run db:types        # supabase gen types typescript --project-id nnyokeivsnvbbxzfqexf
 ```
 
 ### 1e. MCP (optional, for AI assistants)
@@ -107,7 +107,7 @@ SQL directly:
   "mcpServers": {
     "supabase": {
       "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=jrfmgqccicrpdtqztrpt"
+      "url": "https://mcp.supabase.com/mcp?project_ref=nnyokeivsnvbbxzfqexf"
     }
   }
 }
@@ -138,7 +138,7 @@ Then push the database: `npm run setup:sql` after any migration edit, paste
 ## 2. Push the database
 
 ```bash
-npm run db:push             # supabase link --project-ref jrfmgqccicrpdtqztrpt && supabase db push
+npm run db:push             # supabase link --project-ref nnyokeivsnvbbxzfqexf && supabase db push
 ```
 
 …or paste `setup.sql` into the **SQL Editor** — same thing, seed included.

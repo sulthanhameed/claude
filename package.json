@@ -9,7 +9,7 @@
     "check": "npm --prefix frontend run check",
     "mock": "npm --prefix frontend run mock",
     "setup:sql": "node scripts/build-setup-sql.mjs",
-    "db:push": "supabase link --project-ref jrfmgqccicrpdtqztrpt && supabase db push",
+    "db:push": "supabase link --project-ref nnyokeivsnvbbxzfqexf && supabase db push",
     "db:reset": "supabase db reset",
     "db:types": "npm --prefix frontend run types",
     "functions:deploy": "supabase functions deploy create-order razorpay razorpay-webhook",

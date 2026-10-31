@@ -22,8 +22,8 @@ frontend** (Vercel or Netlify). There is no API server to run.
 
 ## 1 · The Supabase project
 
-This repo is wired to **`jrfmgqccicrpdtqztrpt`** —
-<https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt>.
+This repo is wired to **`nnyokeivsnvbbxzfqexf`** —
+<https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf>.
 
 1. **Project Settings → API** → copy the **anon public** key into
    `frontend/.env` (the URL is already the project's).
@@ -38,14 +38,14 @@ Making a *new* project instead? Create it, then change the ref in
 
 **Option A — SQL Editor (one paste)**
 
-Open <https://supabase.com/dashboard/project/jrfmgqccicrpdtqztrpt/sql>, paste
+Open <https://supabase.com/dashboard/project/nnyokeivsnvbbxzfqexf/sql>, paste
 all of `supabase/setup.sql` and run it. That file is the four migrations in
 order **plus** the seed, so the menu arrives with it.
 
 **Option B — CLI**
 
 ```bash
-npm run db:push          # supabase link --project-ref jrfmgqccicrpdtqztrpt && db push
+npm run db:push          # supabase link --project-ref nnyokeivsnvbbxzfqexf && db push
 ```
 
 `db push` applies the migrations but not the seed on a hosted project — paste
