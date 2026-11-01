@@ -16,6 +16,7 @@ supabase/
 │   └── 20261024090300_order_reads.sql my_orders, get_my_order, admin list
 ├── seed.sql                          5 categories, 17 dishes, 4 reviews
 ├── setup.sql                         all of the above, in one paste (generated)
+├── seed-only.sql                     just the menu data, when the tables exist (generated)
 ├── functions/
 │   ├── create-order/                  cart → order (+ confirmation emails)
 │   ├── razorpay/                      create + verify a payment, refunds

@@ -90,7 +90,7 @@ export default function MenuSection({ onView }: Props) {
         )}
         {!loading && !live && (
           <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 font-mono text-[11px] text-amber-800">
-            <span>⚠ {error || "Live menu unavailable — showing a sample menu."}</span>
+            <span className="min-w-0 flex-1">⚠ {error || "Live menu unavailable — showing a sample menu."}</span>
             <button
               onClick={() => void refresh()}
               className="rounded-full border border-amber-300 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] hover:bg-amber-100"

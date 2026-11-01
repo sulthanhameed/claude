@@ -40,7 +40,8 @@ The project is **`nnyokeivsnvbbxzfqexf`** ·
 | `npm run db:push` | links that project and applies `supabase/migrations/` |
 | `npm run db:types` | regenerates `frontend/src/lib/database.types.ts` from it |
 | `npm run functions:deploy` | deploys `create-order`, `razorpay`, `razorpay-webhook` |
-| `npm run setup:sql` | rebuilds `supabase/setup.sql` after a migration edit |
+| `npm run setup:sql` | rebuilds `supabase/setup.sql` and `supabase/seed-only.sql` |
+| `npm run db:check` | asks the live project whether the schema and data are actually there |
 | `npm run dev` | the frontend on <http://localhost:5173> |
 | `npm run mock` | the dev-only stand-in for Supabase on `:5000` |
 | `npm run check` | typecheck + production build |
@@ -245,7 +246,7 @@ products ── reviews        newsletter_subscribers
 | Symptom | Fix |
 |---|---|
 | “Supabase is not configured” | `.env` has no `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` |
-| Menu empty but login works | seed missing — run `supabase/seed.sql` |
+| Menu empty but login works | seed missing — run `npm run db:check` to confirm, then paste `supabase/seed-only.sql` |
 | Signup says “check your inbox” | project has *Confirm email* on; confirm, or turn it off in Auth → Providers |
 | “Razorpay is not configured” | secrets not set, or functions not redeployed |
 | Payments succeed but order stays pending | webhook URL/secret wrong; the client-side verify should still have caught it |

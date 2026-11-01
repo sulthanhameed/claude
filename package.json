@@ -12,6 +12,7 @@
     "db:push": "supabase link --project-ref nnyokeivsnvbbxzfqexf && supabase db push",
     "db:reset": "supabase db reset",
     "db:types": "npm --prefix frontend run types",
+    "db:check": "node scripts/db-check.mjs",
     "functions:deploy": "supabase functions deploy create-order razorpay razorpay-webhook",
     "functions:serve": "supabase functions serve --env-file supabase/functions/.env"
   },
