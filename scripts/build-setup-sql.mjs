@@ -57,3 +57,41 @@ for (const [file, title] of parts) {
 writeFileSync(join(root, "supabase", "setup.sql"), out);
 const statements = out.split("\n").filter((l) => l.trim() && !l.trim().startsWith("--")).length;
 console.log(`supabase/setup.sql written — ${out.split("\n").length} lines, ${statements} SQL lines`);
+
+/* ── seed-only.sql ────────────────────────────────────────────────────────
+   The same seed on its own, for the case that prompted it: the schema is in
+   place but `products` is empty, so the site loads with an empty menu. It is
+   generated from the same `seed.sql` so the two can never drift, and it is
+   safe to run on a project that already has rows (the seed upserts).
+   ──────────────────────────────────────────────────────────────────────── */
+
+const seedBody = readFileSync(join(root, "supabase", "seed.sql"), "utf8").trimEnd();
+
+const seedHeader = `-- ============================================================================
+--  KHANG — menu data only
+--
+--  For when the tables exist but the menu is empty. The site shows
+--  "The menu is empty" when Supabase answers with zero rows, which means the
+--  schema went in but this seed never did.
+--
+--  Supabase Dashboard → SQL Editor → New query → paste this file → Run.
+--
+--  Creates nothing structural — it only fills:
+--    · 5 categories
+--    · 17 dishes
+--    · 4 house reviews
+--
+--  Safe to run on a project that already has data: categories insert on
+--  conflict do nothing, products upsert on their slug, reviews skip
+--  duplicates. Running it twice leaves the same 17 dishes.
+--
+--  Requires the tables from supabase/setup.sql (or the migrations).
+--
+--  This file is generated — edit supabase/seed.sql, then:  npm run setup:sql
+-- ============================================================================
+`;
+
+const seedOut = `${seedHeader}\n${seedBody}\n`;
+writeFileSync(join(root, "supabase", "seed-only.sql"), seedOut);
+const seedStatements = seedOut.split("\n").filter((l) => l.trim() && !l.trim().startsWith("--")).length;
+console.log(`supabase/seed-only.sql written — ${seedOut.split("\n").length} lines, ${seedStatements} SQL lines`);

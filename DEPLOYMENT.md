@@ -52,7 +52,16 @@ npm run db:push          # supabase link --project-ref nnyokeivsnvbbxzfqexf && d
 `supabase/seed.sql` in the SQL Editor afterwards if you use this route.
 
 Verify: **Table Editor** should show `products` with 17 rows, `categories` 5,
-`reviews` 4.
+`reviews` 4 — or let the script tell you:
+
+```bash
+npm run db:check
+```
+
+It reads `frontend/.env`, checks the key's role and project ref, and reports
+the row count of every table the site needs. If the tables are there but the
+menu is empty, paste `supabase/seed-only.sql` — it fills the 5 categories, 17
+dishes and 4 reviews and changes nothing structural.
 
 Then generate the TypeScript types the frontend compiles against:
 

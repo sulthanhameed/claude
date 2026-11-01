@@ -72,10 +72,13 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         setLive(true);
         setError(null);
       } else {
-        // Postgres answered, but `products` has no rows yet.
+        // Postgres answered, but `products` has no rows yet. The schema went
+        // in without the seed, so the fix is the data file, not the code.
         setItems(MENU);
         setLive(false);
-        setError("The menu is empty. Apply supabase/seed.sql to the project.");
+        setError(
+          "The menu is empty — the database has no dishes. Run supabase/seed-only.sql in the SQL Editor, or `npm run db:check` to see why.",
+        );
       }
     } catch (err) {
       setItems(MENU);
