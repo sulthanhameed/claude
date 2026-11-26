@@ -41,7 +41,12 @@ interface AuthContextValue {
     password: string,
     phone?: string,
   ) => Promise<void>;
+  /** Sends the browser to Google; the session comes back via the redirect. */
+  signInWithGoogle: () => Promise<void>;
   logout: () => void;
+  /** Set when a sign-in triggered by a redirect failed, for the dialog to show. */
+  oauthError: string | null;
+  clearOAuthError: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -72,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [checkingSession, setCheckingSession] = useState(true);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   const persist = useCallback((u: User | null) => {
     // Wrapped because this runs inside login/signup/logout: a storage failure
@@ -85,6 +91,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       /* storage unavailable — the in-memory session still works */
     }
   }, []);
+
+  // A visitor arriving back from Google has an #access_token=… fragment. Claim
+  // it once, on mount, and tidy the URL so a refresh does not replay it. This
+  // runs before the session check below, which would otherwise find only the
+  // mirror and treat the visit as signed-out.
+  useEffect(() => {
+    if (!authApi.hasOAuthRedirect()) return;
+    let alive = true;
+
+    (async () => {
+      try {
+        const { token, user: u } = await authApi.completeOAuthSignIn();
+        if (!alive) return;
+        setToken(token);
+        const usr = toUser(u);
+        setUser(usr);
+        persist(usr);
+        setOauthError(null);
+      } catch (err: unknown) {
+        if (!alive) return;
+        setOauthError(err instanceof Error ? err.message : "Google sign-in did not complete.");
+      } finally {
+        if (!alive) return;
+        // strip the fragment either way — replaying it would loop
+        const clean = window.location.pathname + window.location.search;
+        window.history.replaceState(null, "", clean);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [persist]);
 
   // On reload: validate the saved token against the backend so a deleted user
   // or an expired session cannot keep a fake login alive.
@@ -175,6 +214,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const signInWithGoogle = useCallback(async () => {
+    setOauthError(null);
+    try {
+      await authApi.startOAuth("google");
+      // on success the page is already navigating; nothing below runs
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Google sign-in could not start.";
+      setOauthError(message);
+      throw err;
+    }
+  }, []);
+
+  const clearOAuthError = useCallback(() => setOauthError(null), []);
+
   const logout = useCallback(() => {
     setUser(null);
     persist(null);
@@ -197,6 +251,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         signup,
         logout,
+        signInWithGoogle,
+        oauthError,
+        clearOAuthError,
       }}
     >
       {children}

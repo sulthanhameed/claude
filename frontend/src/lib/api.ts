@@ -179,6 +179,16 @@ interface Driver {
     me: () => Promise<{ user: KhangUser }>;
     updateMe: (body: { name?: string; phone?: string }) => Promise<{ user: KhangUser }>;
     logout: () => Promise<void>;
+    /**
+     * Send the browser to the provider. This returns (normally by navigating
+     * away) rather than signing the visitor in: the session arrives on the way
+     * back, through the redirect. See `completeOAuthSignIn`.
+     */
+    startOAuth: (provider: OAuthProvider) => Promise<void>;
+    /** True when the page was just reached by an OAuth redirect. */
+    hasOAuthRedirect: () => boolean;
+    /** Finish that redirect: exchange it for the app's session and profile. */
+    completeOAuthSignIn: () => Promise<{ token: string; user: KhangUser }>;
   };
   productsApi: {
     list: (params?: ListParams) => Promise<{ count: number; items: KhangProduct[] }>;
@@ -271,6 +281,9 @@ function toUser(row: ProfileRow): KhangUser {
   };
 }
 
+/** The social providers the sign-in dialog offers. */
+export type OAuthProvider = "google";
+
 /* an order as the SQL function builds it (already camelCase) */
 type OrderPayload = KhangOrder & {
   user?: string;
@@ -312,13 +325,52 @@ async function currentProfile(): Promise<ProfileRow> {
   if (sessionError || !sessionData.session) {
     throw new ApiError("Please sign in again", 401);
   }
-  const { data, error } = await client
-    .from("profiles")
-    .select("id, name, phone, role, created_at")
-    .eq("id", sessionData.session.user.id)
-    .single();
-  if (error) throw new ApiError(error.message, 400);
-  return data as ProfileRow;
+
+  // The profiles row is created by an `after insert on auth.users` trigger.
+  // With password signup the row is there before the call returns, but with an
+  // OAuth redirect the auth session can land a moment before the trigger has
+  // committed — so the first read may legitimately find nothing. Ask again
+  // rather than failing a sign-in that actually succeeded.
+  const uid = sessionData.session.user.id;
+  for (let attempt = 0; ; attempt++) {
+    const { data, error } = await client
+      .from("profiles")
+      .select("id, name, phone, role, created_at")
+      .eq("id", uid)
+      .maybeSingle();
+
+    if (error) throw new ApiError(error.message, 400);
+    if (data) return data as ProfileRow;
+    if (attempt >= 4) throw new ApiError("Your profile is still being created. Please try again.", 503);
+    await new Promise((r) => setTimeout(r, 180 * (attempt + 1)));
+  }
+}
+
+/** Turn Supabase/Google's terse OAuth failures into something a guest can act on. */
+function oauthMessage(raw: string): string {
+  const m = raw.toLowerCase();
+  if (m.includes("provider is not enabled") || m.includes("unsupported provider")) {
+    return "Google sign-in is not switched on for this project yet. Use email and password, or ask the site owner to enable it (Supabase → Authentication → Providers → Google).";
+  }
+  if (m.includes("redirect") && (m.includes("not allowed") || m.includes("invalid"))) {
+    return "This address is not on the project's redirect list. Add it under Supabase → Authentication → URL Configuration → Redirect URLs.";
+  }
+  // Google reports a refusal as error=access_denied, but its human-readable
+  // error_description is usually "User denied the request" — and Supabase may
+  // hand back either, so match on the sentiment rather than one exact string.
+  if (
+    m.includes("access_denied") ||
+    m.includes("cancelled") ||
+    m.includes("canceled") ||
+    m.includes("denied") ||
+    m.includes("user denied")
+  ) {
+    return "Google sign-in was cancelled — nothing was charged and you can try again.";
+  }
+  if (m.includes("client id") || m.includes("client_id")) {
+    return "Google is configured with a missing or wrong Client ID. Check Supabase → Authentication → Providers → Google.";
+  }
+  return raw;
 }
 
 const supabaseDriver: Driver = {
@@ -399,6 +451,72 @@ const supabaseDriver: Driver = {
     async logout() {
       if (!supabase) return;
       await supabase.auth.signOut({ scope: "local" });
+    },
+
+    async startOAuth(provider) {
+      const client = requireSupabase();
+
+      // The provider sends the browser back here. Three things about this URL
+      // matter, and each is a way the flow has broken before:
+      //   · pathname, not the whole href — keep any query string the visitor
+      //     arrived with out of it
+      //   · no hash — Supabase returns its own fragment and a stray one would
+      //     collide with it
+      //   · the origin, so it is the deployed host and not localhost
+      const callback = `${window.location.origin}${window.location.pathname}`;
+
+      const { error } = await client.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: callback,
+          // Google names people "full_name" in its own payload; Supabase reads
+          // "name" first when it creates the auth user, which is what the
+          // profiles trigger copies.
+          queryParams: { access_type: "offline", prompt: "select_account" },
+        },
+      });
+      if (error) {
+        throw new ApiError(oauthMessage(error.message), error.status ?? 400);
+      }
+      // success means the browser is already navigating to the provider
+    },
+
+    hasOAuthRedirect() {
+      if (!supabase) return false;
+      const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+      const params = new URLSearchParams(hash);
+      return params.has("access_token") || params.has("error");
+    },
+
+    async completeOAuthSignIn() {
+      const client = requireSupabase();
+
+      // The client reads the fragment itself (detectSessionInUrl). If the
+      // provider reported a failure instead, that error is in the fragment too
+      // and the session will be empty — surface it, then clean the URL.
+      const { data, error } = await client.auth.getSession();
+      if (error) throw new ApiError(oauthMessage(error.message), 400);
+
+      const session = data.session;
+      if (!session) {
+        // no session: either the provider refused, or the fragment was already
+        // consumed by a previous pass
+        const params = new URLSearchParams(
+          window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "",
+        );
+        const described = params.get("error_description") || params.get("error");
+        throw new ApiError(
+          oauthMessage(described ?? "Google sign-in was cancelled or did not complete."),
+          401,
+        );
+      }
+
+      const profile = await currentProfile();
+      setToken(session.access_token);
+      return {
+        token: session.access_token,
+        user: { ...toUser(profile), email: session.user.email ?? "" },
+      };
     },
   },
 
@@ -615,6 +733,11 @@ const previewDriver: Driver = {
     logout: async () => {
       clearToken();
     },
+    // The local mock has no auth server to redirect to. Failing loudly beats a
+    // button that looks alive and does nothing.
+    startOAuth: () => Promise.reject(new ApiError(NO_OAUTH_PREVIEW, 0)),
+    hasOAuthRedirect: () => false,
+    completeOAuthSignIn: () => Promise.reject(new ApiError(NO_OAUTH_PREVIEW, 0)),
   },
   productsApi: {
     list: (params = {}) => {
@@ -666,6 +789,9 @@ const previewDriver: Driver = {
  * page goes blank. A rejected promise is caught by every existing `.catch()`,
  * which lets the menu fall back to its curated list and the banner explain why.
  */
+const NO_OAUTH_PREVIEW =
+  "Google sign-in needs the live site — it is switched off while the app runs on the local mock. Use email and password, or try it on the deployed site.";
+
 const noBackend = (): Promise<never> =>
   Promise.reject(
     new ApiError(
@@ -681,6 +807,9 @@ const unconfiguredDriver: Driver = {
     me: noBackend,
     updateMe: noBackend,
     logout: async () => {},
+    startOAuth: noBackend,
+    hasOAuthRedirect: () => false,
+    completeOAuthSignIn: noBackend,
   },
   productsApi: { list: noBackend, get: noBackend },
   ordersApi: {
