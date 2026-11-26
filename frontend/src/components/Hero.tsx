@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FoodItem } from "../data/menu";
 import { useMenu } from "../context/MenuContext";
 import { FlameIcon, StarIcon } from "./Icons";
+import { ORBIT_MARGIN, ORBIT_MAX, useOrbitFit } from "../hooks/useOrbitScale";
 
 // Fixed position slots — center + 4 around
 type Slot = "center" | "tr" | "bl" | "tl" | "br";
@@ -44,6 +45,11 @@ export default function Hero() {
   const [animating, setAnimating] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
 
+  // The orbit is measured, not guessed: its column width depends on the text
+  // beside it and on the container's max-width, so a media query cannot answer.
+  const orbitRef = useRef<HTMLDivElement>(null);
+  const orbit = useOrbitFit(orbitRef);
+
   // Re-seat the showcase when the live menu arrives from Supabase.
   useEffect(() => {
     setSlotIds(slotsFromPool(pool));
@@ -52,9 +58,6 @@ export default function Hero() {
   // Reverse map: foodId -> slot
   const idToSlot = (id: string): Slot | undefined =>
     (Object.keys(slotIds) as Slot[]).find((s) => slotIds[s] === id);
-
-  const centerItem =
-    pool.find((item) => item.id === slotIds.center) ?? pool[0];
 
   const swap = (clicked: Slot) => {
     if (clicked === "center" || animating) return;
@@ -112,7 +115,13 @@ export default function Hero() {
       </div>
 
       {/* ─── Content ─── */}
-      <div className="relative mx-auto grid min-h-screen max-w-7xl items-center gap-12 px-4 pb-16 pt-32 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pt-36">
+      {/* From xl up the text and the orbit sit side by side; below that they
+          stack. `xl` is 1280 px because that is the first width at which the
+          orbit's column is actually wide enough for the composition — the old
+          `lg` (1024) left it 406 px for a 450 px shape. Between 640 and 1280
+          the orbit is centred under the text at up to 560 px, which is a
+          bigger, easier-to-tap version than either column could offer. */}
+      <div className="relative mx-auto grid min-h-[100svh] max-w-7xl items-center gap-10 px-4 pb-16 pt-28 sm:px-6 sm:gap-12 lg:px-8 lg:pt-32 xl:grid-cols-[1.02fr_1fr] xl:gap-16 xl:pt-36">
         {/* ─── Left: text content ─── */}
         <div className="relative z-10">
           <div className="inline-flex animate-fade-up items-center gap-3 rounded-full border border-emerald-200 bg-white/70 px-5 py-2 font-mono tracking-eyebrow text-khang-red shadow-sm backdrop-blur-md">
@@ -125,7 +134,7 @@ export default function Hero() {
             Now Delivering
           </div>
 
-          <h1 className="mt-8 animate-fade-up delay-100 font-brush tracking-display text-[3.25rem] leading-[1.02] text-khang-ink sm:text-[4.5rem] lg:text-[5.5rem]">
+          <h1 className="mt-6 animate-fade-up delay-100 font-brush tracking-display text-[clamp(2.5rem,7.2vw,5rem)] leading-[1.02] text-khang-ink sm:mt-8">
             Authentic
             <br />
             <span className="italic font-light text-khang-red">Chinese</span>{" "}
@@ -135,7 +144,7 @@ export default function Hero() {
             <span className="font-brush font-medium">fresh.</span>
           </h1>
 
-          <p className="mt-7 max-w-lg animate-fade-up delay-200 font-body text-base font-light leading-[1.85] tracking-wide text-zinc-600 sm:text-[17px]">
+          <p className="mt-6 max-w-lg animate-fade-up delay-200 font-body text-[15px] font-light leading-[1.75] tracking-wide text-zinc-600 sm:mt-7 sm:text-[17px] sm:leading-[1.85]">
             Hand‑folded dim sum, wok‑tossed noodles &amp; sizzling specialities —
             the soul of Canton &amp; Sichuan, delivered to your door in 30 minutes.
           </p>
@@ -184,66 +193,102 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ─── Right: ANIMATED & INTERACTIVE food showcase ─── */}
-        <div className="relative hidden h-[580px] lg:block">
-          {/* Decorative dashed orbit ring */}
+        {/* ─── The dish orbit ─────────────────────────────────────────────
+            One design for every screen, scaled to the space it is given.
+
+            It used to be `hidden lg:block` with hard-coded pixel coordinates
+            inside a 460 px frame, so it only appeared at ≥1024 px — and even
+            then the column was 406 px wide, 44 px narrower than the drawing.
+            An iPad in portrait, a Surface, a half-screen laptop and every
+            tablet all fell through to the phone fallback.
+
+            Now the frame is measured (useOrbitFit) and every coordinate is
+            multiplied by one factor, so the composition is identical at
+            300 px and at 560 px and the flight between slots stays exact.
+            ─────────────────────────────────────────────────────────────── */}
+        <div
+          ref={orbitRef}
+          className="relative mx-auto flex w-full items-center justify-center"
+          style={{ maxWidth: `min(100%, ${ORBIT_MAX}px)` }}
+        >
+          {/* The inward frame holds the rings and dishes. It is inset by the
+              badge overhang so that the badges, which hang past its edges,
+              still land inside the outer box the column was measured for. */}
           <div
-            className="absolute right-8 top-1/2 h-[460px] w-[460px] -translate-y-1/2 rounded-full border border-dashed border-emerald-300/60 animate-spin-slow"
-            style={{ animationDuration: "60s" }}
-          />
+            className="relative"
+            style={{
+              width: orbit.frame,
+              height: orbit.frame,
+              marginLeft: ORBIT_MARGIN.left * orbit.scale,
+            }}
+          >
+            {/* dashed orbit ring */}
+            <div
+              className="absolute rounded-full border border-dashed border-emerald-300/60 animate-spin-slow"
+              style={{
+                left: 0,
+                top: 0,
+                width: orbit.frame,
+                height: orbit.frame,
+                animationDuration: "60s",
+              }}
+            />
 
-          {/* Solid inner circle backdrop */}
-          <div className="absolute right-16 top-1/2 h-[340px] w-[340px] -translate-y-1/2 rounded-full border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white shadow-[0_30px_80px_rgba(6,78,46,0.18)]" />
+            {/* solid inner disc */}
+            <div
+              className="absolute rounded-full border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white"
+              style={{
+                left: 60 * orbit.scale,
+                top: 60 * orbit.scale,
+                width: 340 * orbit.scale,
+                height: 340 * orbit.scale,
+                boxShadow: `0 ${20 * orbit.scale}px ${60 * orbit.scale}px rgba(6,78,46,0.18)`,
+              }}
+            />
 
-          {/* Steam particles rising from center dish */}
-          <div className="pointer-events-none absolute right-[220px] top-[140px] z-10">
-            <div
-              className="steam absolute h-3 w-3 rounded-full bg-white/70 blur-sm"
-              style={{ animationDelay: "0s" }}
-            />
-            <div
-              className="steam absolute left-4 h-2 w-2 rounded-full bg-white/60 blur-sm"
-              style={{ animationDelay: "0.6s" }}
-            />
-            <div
-              className="steam absolute left-8 h-2.5 w-2.5 rounded-full bg-white/65 blur-sm"
-              style={{ animationDelay: "1.2s" }}
-            />
-            <div
-              className="steam absolute left-12 h-2 w-2 rounded-full bg-white/55 blur-sm"
-              style={{ animationDelay: "1.8s" }}
-            />
-          </div>
+            {/* steam, rising from the centre dish */}
+            {[0, 0.6, 1.2, 1.8].map((delay, i) => (
+              <div
+                key={`steam-${i}`}
+                className="pointer-events-none absolute z-10"
+                style={{
+                  left: (232 + i * 14) * orbit.scale,
+                  top: 96 * orbit.scale,
+                  animationDelay: `${delay}s`,
+                }}
+              >
+                <div
+                  className="steam rounded-full bg-white/60 blur-sm"
+                  style={{ width: 8 * orbit.scale, height: 8 * orbit.scale }}
+                />
+              </div>
+            ))}
 
-          {/* Inner showcase reference — anchored 460×460 box. Each dish floats
-              freely inside it and physically slides between slots on click. */}
-          <div className="absolute right-8 top-1/2 h-[460px] w-[460px] -translate-y-1/2">
-            {/* Iterate over the FOOD ITEMS (not slots) and key by id, so React
-                keeps the same DOM element when its slot changes — letting CSS
-                smoothly transition top/left/width/height between positions. */}
+            {/* the dishes */}
             {pool.map((item) => {
               const slot = idToSlot(item.id);
               if (!slot) return null;
-              const pos = SLOT_POS[slot];
+              const base = SLOT_POS[slot];
               const isCenter = slot === "center";
               const isHighlighted = highlightId === item.id;
+              const size = base.size * orbit.scale;
 
               return (
                 <button
                   key={item.id}
                   onClick={() => swap(slot)}
                   disabled={isCenter || animating}
-                  aria-label={`Show ${item.name}`}
+                  aria-label={isCenter ? item.name : `Show ${item.name}`}
                   className={`group absolute -translate-x-1/2 -translate-y-1/2 ${
                     isCenter ? "cursor-default" : "cursor-pointer"
                   }`}
                   style={{
-                    left: `${pos.left}px`,
-                    top: `${pos.top}px`,
-                    width: `${pos.size}px`,
-                    height: `${pos.size}px`,
-                    zIndex: isHighlighted ? 50 : pos.z,
-                    // The actual flying animation — position + size all glide
+                    left: base.left * orbit.scale,
+                    top: base.top * orbit.scale,
+                    width: size,
+                    height: size,
+                    zIndex: isHighlighted ? 50 : base.z,
+                    // the flying animation: position and size glide together
                     transition:
                       "left 850ms cubic-bezier(0.34, 1.3, 0.4, 1), " +
                       "top 850ms cubic-bezier(0.34, 1.3, 0.4, 1), " +
@@ -252,8 +297,6 @@ export default function Hero() {
                     willChange: "left, top, width, height",
                   }}
                 >
-                  {/* Inner wrapper — handles visual treatments per state.
-                      Crossfade between "center mode" and "side mode" treatments. */}
                   <div
                     className={`relative h-full w-full overflow-hidden rounded-full transition-all duration-700 ${
                       isCenter
@@ -270,99 +313,171 @@ export default function Hero() {
                       style={isCenter ? { animationDuration: "50s" } : undefined}
                     />
 
-                    {/* Center-only label — fades in once positioned at center */}
+                    {/* centre-only label */}
                     <div
-                      className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-5 pt-12 text-center text-white transition-opacity duration-500 ${
+                      className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent text-center text-white transition-opacity duration-500 ${
                         isCenter ? "opacity-100 delay-200" : "opacity-0"
                       }`}
+                      style={{
+                        padding: `${10 * orbit.scale}px ${12 * orbit.scale}px`,
+                        paddingTop: 40 * orbit.scale,
+                      }}
                     >
-                      <div className="font-cn text-lg tracking-wider text-emerald-200">
+                      <div
+                        className="font-cn tracking-wider text-emerald-200"
+                        style={{ fontSize: Math.max(11, 17 * orbit.scale) }}
+                      >
                         {item.chineseName}
                       </div>
-                      <div className="font-display text-sm font-semibold tracking-tight">
+                      <div
+                        className="font-display font-semibold tracking-tight"
+                        style={{ fontSize: Math.max(10, 13 * orbit.scale) }}
+                      >
                         {item.name}
                       </div>
-                      <div className="mt-1 inline-flex items-center gap-2 font-mono text-[10px] font-semibold tracking-[0.15em] text-emerald-200">
-                        <StarIcon className="h-3 w-3" />
+                      <div
+                        className="mt-0.5 inline-flex items-center gap-1.5 font-mono font-semibold tracking-[0.15em] text-emerald-200"
+                        style={{ fontSize: Math.max(8, 10 * orbit.scale) }}
+                      >
+                        <StarIcon
+                          style={{ width: 11 * orbit.scale, height: 11 * orbit.scale }}
+                        />
                         {item.rating} · ₹{item.price}
                       </div>
                     </div>
 
-                    {/* Side-only hover overlay */}
+                    {/* side-only hover wash */}
                     {!isCenter && (
                       <div className="pointer-events-none absolute inset-0 bg-khang-ink/0 transition duration-300 group-hover:bg-khang-ink/15" />
                     )}
 
-                    {/* Highlight pulse ring while flying */}
                     {isHighlighted && (
                       <span className="pointer-events-none absolute inset-0 rounded-full ring-4 ring-emerald-400/70 animate-glow-soft" />
                     )}
                   </div>
 
-                  {/* Side-only price chip (fades out when moving to center) */}
-                  <div
-                    className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-khang-ink px-2.5 py-0.5 font-mono text-[10px] font-semibold text-white shadow-md transition-all duration-500 group-hover:bg-khang-red ${
-                      isCenter
-                        ? "-bottom-1 opacity-0"
-                        : "-bottom-2 opacity-100"
-                    }`}
-                  >
-                    ₹{item.price}
-                  </div>
+                        {/* price chip — the satellites sit close together once
+                      scaled past this, so the chips go before they collide */}
+                  {orbit.scale > 0.72 && (
+                    <div
+                      className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-khang-ink font-mono font-semibold text-white shadow-md transition-all duration-500 group-hover:bg-khang-red ${
+                        isCenter ? "-bottom-1 opacity-0" : "-bottom-2 opacity-100"
+                      }`}
+                      style={{
+                        padding: `${2 * orbit.scale}px ${10 * orbit.scale}px`,
+                        fontSize: Math.max(8, 10 * orbit.scale),
+                      }}
+                    >
+                      ₹{item.price}
+                    </div>
+                  )}
 
-                  {/* Side-only hover tooltip */}
+                  {/* hover tooltip — pointer devices only, so it is never in
+                      the way on a tablet */}
                   {!isCenter && (
-                    <div className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-3 py-1 font-display text-[10px] font-semibold tracking-tight text-khang-ink opacity-0 shadow-lg ring-1 ring-emerald-100 transition group-hover:opacity-100">
-                      {item.name}{" "}
-                      <span className="text-khang-red">·</span>{" "}
+                    <div
+                      className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-3 py-1 font-display font-semibold tracking-tight text-khang-ink opacity-0 shadow-lg ring-1 ring-emerald-100 transition group-hover:opacity-100 lg:block"
+                      style={{ bottom: "calc(100% + 8px)", fontSize: 10 }}
+                    >
+                      {item.name} <span className="text-khang-red">·</span>{" "}
                       <span className="font-mono text-[9px]">tap to swap</span>
                     </div>
                   )}
                 </button>
               );
             })}
-          </div>
 
-          {/* "Best Seller" pill — drifting horizontally */}
-          <div className="absolute right-36 top-2 z-30 inline-flex animate-fade-up delay-500 items-center gap-2 rounded-full bg-khang-ink px-4 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg animate-drift-x">
-            <FlameIcon className="h-3 w-3 text-emerald-300" />
-            Best Seller
-          </div>
-
-          {/* Price tag bubble — bottom right */}
-          <div
-            className="absolute bottom-32 right-2 z-30 grid h-20 w-20 animate-fade-up delay-500 place-items-center rounded-full bg-gradient-to-br from-khang-red to-khang-red-dark text-white shadow-xl ring-4 ring-white animate-float-soft"
-            style={{ animationDelay: "1.5s" }}
-          >
-            <div className="text-center leading-none">
-              <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/70">
-                from
+            {/* "Best Seller" pill. It is the one badge wide enough to collide
+                with a satellite dish once the orbit shrinks below a phone, so
+                it is the one badge that is dropped — the from-price bubble and
+                the fresh badge are round and sit clear of the ring. */}
+            {orbit.scale > 0.8 && (
+              <div
+                className="pointer-events-none absolute z-30 inline-flex animate-drift-x items-center gap-1.5 rounded-full bg-khang-ink font-mono font-semibold uppercase text-white shadow-lg"
+                style={{
+                  left: orbit.frame / 2,
+                  top: -10,
+                  transform: "translateX(-50%)",
+                  padding: `${6 * orbit.scale}px ${14 * orbit.scale}px`,
+                  fontSize: Math.max(8, 10 * orbit.scale),
+                  letterSpacing: "0.18em",
+                }}
+              >
+                <FlameIcon
+                  className="text-emerald-300"
+                  style={{ width: 11 * orbit.scale, height: 11 * orbit.scale }}
+                />
+                Best Seller
               </div>
-              <div className="mt-1 font-brush text-xl font-semibold">₹160</div>
-            </div>
-          </div>
+            )}
 
-          {/* "Fresh" rotating tag */}
-          <div className="absolute left-0 bottom-2 z-30 animate-fade-up delay-500">
+            {/* from-price bubble */}
             <div
-              className="relative h-20 w-20 animate-spin-slow"
-              style={{ animationDuration: "20s" }}
+              className="pointer-events-none absolute z-30 grid animate-float-soft place-items-center rounded-full bg-gradient-to-br from-khang-red to-khang-red-dark text-white ring-4 ring-white"
+              style={{
+                right: -6 * orbit.scale,
+                bottom: 96 * orbit.scale,
+                width: 76 * orbit.scale,
+                height: 76 * orbit.scale,
+                boxShadow: `0 ${12 * orbit.scale}px ${30 * orbit.scale}px rgba(6,78,46,0.35)`,
+                animationDelay: "1.5s",
+              }}
+            >
+              <div className="text-center leading-none">
+                <div
+                  className="font-mono uppercase text-white/70"
+                  style={{
+                    fontSize: Math.max(7, 9 * orbit.scale),
+                    letterSpacing: "0.12em",
+                  }}
+                >
+                  from
+                </div>
+                <div
+                  className="mt-0.5 font-brush font-semibold"
+                  style={{ fontSize: Math.max(11, 19 * orbit.scale) }}
+                >
+                  ₹160
+                </div>
+              </div>
+            </div>
+
+            {/* rotating "fresh" badge */}
+            <div
+              className="pointer-events-none absolute z-30 animate-spin-slow"
+              style={{
+                left: -10 * orbit.scale,
+                bottom: 8 * orbit.scale,
+                width: 78 * orbit.scale,
+                height: 78 * orbit.scale,
+                animationDuration: "20s",
+              }}
             >
               <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
                 <defs>
                   <path
-                    id="circle-text"
+                    id="hero-circle-text"
                     d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"
                   />
                 </defs>
-                <text className="font-mono text-[11px] font-semibold uppercase tracking-[0.3em] fill-khang-ink">
-                  <textPath href="#circle-text">
+                <text
+                  className="fill-khang-ink font-mono font-semibold uppercase"
+                  style={{ fontSize: 11, letterSpacing: "0.3em" }}
+                >
+                  <textPath href="#hero-circle-text">
                     ✦ Hand-crafted · Fresh daily ·
                   </textPath>
                 </text>
               </svg>
               <div className="absolute inset-0 grid place-items-center">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-emerald-500 font-brush text-base font-medium text-white">
+                <div
+                  className="grid place-items-center rounded-full bg-emerald-500 font-brush font-medium text-white"
+                  style={{
+                    width: 36 * orbit.scale,
+                    height: 36 * orbit.scale,
+                    fontSize: Math.max(11, 15 * orbit.scale),
+                  }}
+                >
                   新
                 </div>
               </div>
@@ -370,59 +485,6 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* ─── Mobile food preview (only < lg) — also interactive ─── */}
-        <div className="relative animate-fade-up delay-200 lg:hidden">
-          {/* Featured large card */}
-          <div className="relative mb-3 overflow-hidden rounded-3xl ring-1 ring-emerald-100 shadow-lg animate-float-softer">
-            <img
-              src={centerItem.image}
-              alt={centerItem.name}
-              className="aspect-[16/10] w-full object-cover transition-all duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            <div className="absolute bottom-3 left-4 text-white">
-              <div className="font-cn text-base tracking-wider text-emerald-200">
-                {centerItem.chineseName}
-              </div>
-              <div className="font-display text-sm font-semibold tracking-tight">
-                {centerItem.name}
-              </div>
-            </div>
-            <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-0.5 font-mono text-[10px] font-semibold text-khang-ink shadow">
-              <StarIcon className="h-3 w-3 text-khang-red" />
-              {centerItem.rating}
-            </div>
-          </div>
-
-          {/* 4-up grid below — click to swap into center */}
-          <div className="grid grid-cols-4 gap-2">
-            {(["tr", "bl", "tl", "br"] as Slot[]).map((s, i) => {
-              const item = pool.find((dish) => dish.id === slotIds[s]);
-              if (!item) return null;
-              return (
-                <button
-                  key={s}
-                  onClick={() => swap(s)}
-                  className={`group relative aspect-square overflow-hidden rounded-2xl ring-1 ring-emerald-100 shadow-md transition active:scale-95 ${
-                    i % 2 === 0 ? "animate-float-soft" : "animate-float-softer"
-                  }`}
-                  style={{ animationDelay: `${i * 0.4}s` }}
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-active:scale-110"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
-                    <div className="text-center font-brush text-xs font-semibold text-white">
-                      ₹{item.price}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
       </div>
 
       {/* Scroll cue */}
