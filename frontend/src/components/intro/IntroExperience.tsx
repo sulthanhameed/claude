@@ -10,6 +10,7 @@ import {
 } from "./introBrand";
 import { INTRO_SEEN_KEY, frameAt, smoothstep, type IntroFrame } from "./introTimeline";
 import { useBodyScrollLock } from "../../hooks/useBodyScrollLock";
+import { useStageFit } from "../../hooks/useStageFit";
 
 export function shouldPlayIntro(): boolean {
   if (typeof window === "undefined") return false;
@@ -40,17 +41,25 @@ interface Props {
   onDone: () => void;
 }
 
+/**
+ * How long to hold this page, on this screen. The wordmark needs roughly a
+ * second and a half after the scene has dissolved to land, and a phone propped
+ * in landscape is the tightest case there is — so the hold is expressed in the
+ * units the viewer actually has (time), not in pixels.
+ */
+const HOLD_FLOOR = 1400;
+
 export default function IntroExperience({ onDone }: Props) {
   const reduced = useMemo(() => {
     if (typeof window === "undefined" || !window.matchMedia) return false;
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // Reduced motion: hold the finished restaurant scene instead of animating.
-  const [portrait, setPortrait] = useState(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return false;
-    return window.matchMedia("(max-width: 640px) and (orientation: portrait)").matches;
-  });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const sceneBoxRef = useRef<HTMLDivElement>(null);
+  const fit = useStageFit(sceneBoxRef);
+
   // Reduced motion opens on the finished still: the clip's last frame, the
   // name and logo sitting complete on white.
   const [ms, setMs] = useState(() => (reduced ? INTRO_TOTAL : 0));
@@ -58,11 +67,13 @@ export default function IntroExperience({ onDone }: Props) {
   const [leaving, setLeaving] = useState(false);
   const beatRef = useRef(beat);
   const doneRef = useRef(false);
-  const stageRef = useRef<HTMLDivElement>(null);
 
   const frame: IntroFrame = useMemo(() => frameAt(Math.min(ms, SCENE_END)), [ms]);
 
-  const viewBox = portrait ? "250 0 500 604" : "0 0 1000 600";
+  // Which crop of the artwork to use. The scene is the only layer that needs
+  // one — the lockup is drawn in its own box and is sized by CSS — so this is
+  // simply "the tall crop on a phone standing up, the wide one everywhere else".
+  const viewBox = fit.fitMode === "tall" ? "250 0 500 600" : "0 0 1000 600";
 
   // Two clips, one after the other: the meal plays, the drawing dissolves, and
   // then the name-and-logo clip — the one /brand plays alone — has the stage.
@@ -84,27 +95,21 @@ export default function IntroExperience({ onDone }: Props) {
     markIntroSeen();
   }, []);
 
-  // Small screens get a taller crop of the scene so the diner stays readable.
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return;
-    const mq = window.matchMedia("(max-width: 640px) and (orientation: portrait)");
-    const onChange = () => setPortrait(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
   // Lock page scroll behind the overlay (shared counter, so it composes with
   // any dialog that opens later).
   useBodyScrollLock(true);
 
   useEffect(() => {
-    const node = stageRef.current;
+    const node = rootRef.current;
     if (node && !reduced) {
       // Keep keyboard users inside the intro while it plays.
       node.focus({ preventScroll: true });
     }
+    // Escape (and Enter/Space, for a remote or a keyboard without Esc) leaves
+    // the intro — the same gesture as before, now also reachable on a device
+    // that has no pointer.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") finish();
+      if (e.key === "Escape" || e.key === "Enter" || e.key === " ") finish();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -132,14 +137,14 @@ export default function IntroExperience({ onDone }: Props) {
     const tick = (now: number) => {
       if (!start) start = now;
       const elapsed = now - start;
-      const capped = Math.min(INTRO_TOTAL, elapsed);
-      setMs(capped);
+      const capped = Math.min(INTRO_TOTAL + HOLD_FLOOR, elapsed);
+      setMs(Math.min(INTRO_TOTAL, capped));
       const nextBeat = capped < BRAND_START ? "eat" : "out";
       if (nextBeat !== beatRef.current) {
         beatRef.current = nextBeat;
         setBeat(nextBeat);
       }
-      if (capped < INTRO_TOTAL) {
+      if (capped < INTRO_TOTAL + HOLD_FLOOR) {
         handle = raf(tick);
       } else {
         finish();
@@ -151,9 +156,12 @@ export default function IntroExperience({ onDone }: Props) {
 
   return (
     <div
+      ref={rootRef}
       className="intro-root"
       data-beat={beat}
+      data-fit={fit.fitMode}
       data-reduced={reduced ? "true" : "false"}
+      data-landscape={fit.landscape ? "true" : "false"}
       style={{
         opacity: leaving ? 0 : 1,
         transition: leaving ? "opacity 440ms ease" : undefined,
@@ -163,12 +171,22 @@ export default function IntroExperience({ onDone }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="Khang introduction"
+      tabIndex={-1}
     >
-      <div className="intro-stage" ref={stageRef} tabIndex={-1}>
-        {/* the meal, and then its dissolve to white */}
-        <IntroScene frame={frame} viewBox={viewBox} opacity={sceneOpacity} />
-        {/* the name and logo, as the next clip on the same white stage */}
-        <IntroBrandTitle ms={brandMs} viewBox={viewBox} align="center" />
+      <div className="intro-stage" ref={stageRef}>
+        <div className="intro-scene" ref={sceneBoxRef}>
+          {/* the meal, and then its dissolve to white */}
+          <IntroScene frame={frame} viewBox={viewBox} opacity={sceneOpacity} />
+        </div>
+
+        {/* The name and logo, as the second clip. It starts once the scene has
+            finished dissolving — the two never share the stage — so it gets the
+            whole screen, and CSS sizes it from the screen rather than from the
+            artwork's wide crop. That is what keeps it readable on a phone held
+            sideways and on an ultrawide monitor alike. */}
+        <div className="intro-lockup" aria-hidden="true">
+          <IntroBrandTitle ms={brandMs} align="center" />
+        </div>
       </div>
     </div>
   );

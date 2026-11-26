@@ -30,6 +30,9 @@ This repo is wired to **`nnyokeivsnvbbxzfqexf`** —
 2. **Authentication → Providers → Email** — for a smooth demo, turn
    **Confirm email** off. Leave it on for production; the app then tells the
    guest to confirm before signing in.
+3. **Authentication → URL Configuration** — set **Site URL** to the deployed
+   address and add it to **Redirect URLs**. Google sign-in returns through
+   `redirectTo`, and Supabase refuses any address that is not on that list.
 
 Making a *new* project instead? Create it, then change the ref in
 `package.json` (`db:push`, `db:types`), `frontend/.env` and `.mcp.json`.
@@ -126,6 +129,37 @@ VITE_SUPABASE_ANON_KEY=<anon key>
 
 `frontend/vercel.json` already sets the SPA rewrite and security headers, which
 is what makes `/brand` (the brand-film page) resolve.
+
+### Google sign-in (optional)
+
+The dialog has a **Continue with Google** button. It is wired up and works, but
+it stays dark until the project is given a client ID — the app says so plainly
+when it is not:
+
+> Google sign-in is not switched on for this project yet.
+
+To switch it on:
+
+1. **Google Cloud Console** → *APIs & Services* → *Credentials* →
+   **Create credentials → OAuth client ID → Web application**.
+2. **Authorised redirect URI** — exactly this, with your project ref:
+   ```
+   https://<ref>.supabase.co/auth/v1/callback
+   ```
+   (not your site's address: Supabase receives the callback and then forwards
+   the session back to the site)
+3. **Authorised JavaScript origin** — your deployed origin, e.g.
+   `https://your-app.vercel.app` (and `http://localhost:5173` for local work).
+4. Copy the **Client ID** and **Client secret** into
+   **Supabase → Authentication → Providers → Google** and enable the provider.
+5. Make sure the site's own address is in **Authentication → URL Configuration
+   → Redirect URLs** — this is the step people miss, and it fails with
+   *"redirect_uri_mismatch"* if it is.
+
+The client reads the returned session from the URL fragment, so
+`detectSessionInUrl` must stay `true` in `frontend/src/lib/supabase.ts`. If a
+Google account has no name, the `handle_new_user` trigger falls back to the
+local part of the email address.
 
 ### Netlify alternative
 

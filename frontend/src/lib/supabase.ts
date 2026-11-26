@@ -26,8 +26,14 @@ export const supabase: SupabaseClient<Database> | null = isSupabaseConfigured
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        // the site is a single-page app with no OAuth redirect to detect
-        detectSessionInUrl: false,
+        // Google sign-in is a full-page redirect: Supabase sends the browser
+        // back to this site with the session in the URL fragment. This has to
+        // be true or the client drops that fragment, the visitor lands on the
+        // homepage looking signed out, and the flow appears to have failed.
+        detectSessionInUrl: true,
+        // implicit keeps the tokens in the fragment instead of an ?code= that
+        // a hash router or a proxy rewrite could strip
+        flowType: "implicit",
         storageKey: "khang_supabase_auth",
       },
       global: { headers: { "x-client-info": "khang-web" } },
