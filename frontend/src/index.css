@@ -429,44 +429,99 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   will-change: opacity;
+  /* 100dvh, not 100vh: on iOS the browser's own bars sit inside the viewport,
+     so vh is taller than the visible area and the bottom of the picture — which
+     is where the wordmark lands — hides behind the toolbar. dvh follows them
+     as they slide away. */
+  height: 100dvh;
+  max-height: 100dvh;
+  touch-action: none;
+  outline: none;
 }
+
+/* ── the stage ──────────────────────────────────────────────────────────────
+   Two clips, one cell. They never overlap in time: the meal has fully
+   dissolved to white (SCENE_END + SCENE_FADE) before the name-and-logo clip
+   draws its first frame (BRAND_START), and those two constants are equal.
+   So each layer can simply own the whole stage, and neither has to steal room
+   from the other.
+
+   That is what makes every device work: the lockup is no longer a small part
+   of a 1000-unit-wide crop that letterboxes to a thin strip on an ultrawide
+   screen and all but vanishes on a phone held sideways. It is sized from the
+   screen it is on, so "Khang" reads at a comfortable size from 280 px to
+   3440 px wide.
+
+   The scene keeps the artwork's own framing, chosen from the stage's aspect
+   ratio rather than a `max-width` media query — a phone on its side is 844 px
+   wide and never matches a 640 px breakpoint, which is how it ended up with
+   the wrong crop and the empty margins on either side.
+   ────────────────────────────────────────────────────────────────────────── */
 
 .intro-stage {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
   outline: none;
 }
 
-/* The scene and the brand clip sit in the same grid cell, so they share one
-   box and therefore one mapping from artwork units to pixels. They are separate
-   elements: the scene draws the diner, the clip draws the name and logo. */
-.intro-svg,
-.intro-brand {
-  grid-area: 1 / 1;
+/* each clip fills the stage, and centres its own art inside it */
+.intro-scene,
+.intro-lockup {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* keep clear of the notch, the rounded corners and the home indicator */
+  padding:
+    max(14px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
+}
+
+.intro-svg {
   width: 100%;
   height: 100%;
-  max-height: 100vh;
   display: block;
   overflow: visible;
 }
 
+/* The lockup is one box with the clip's own aspect ratio (the crop the clip
+   needs at its widest, ≈ 293 × 276), sized by whichever of the screen's width,
+   the screen's height, or a comfortable maximum is smallest. It therefore
+   always fits, in either orientation, and is never clipped. */
 .intro-brand {
+  display: block;
+  width: min(80vw, 78dvh, 560px);
+  height: auto;
+  aspect-ratio: 293 / 276;
   pointer-events: none;
 }
 
-/* Portrait phones: the SVG keeps its tall crop, the wordmark takes the lower third. */
-@media (max-width: 640px) and (orientation: portrait) {
-  .intro-stage {
-    align-items: start;
-    padding-top: max(2vh, env(safe-area-inset-top));
+/* ── extreme stages ──────────────────────────────────────────────────────
+   A phone held sideways leaves ~300 px of height. There the scene wants the
+   full height and the lockup gets the same box as everywhere else, so the two
+   are simply the same size — no stacking, no squeeze. */
+
+/* very short stage (a phone in landscape, or a window with devtools docked):
+   the lockup steps aside rather than shrinking the scene, sitting in the
+   corner that the scene's letterbox leaves empty */
+@media (max-height: 420px) {
+  .intro-lockup {
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: max(24px, env(safe-area-inset-right));
   }
-  .intro-svg,
   .intro-brand {
-    height: auto;
-    max-height: 62vh;
-    aspect-ratio: 500 / 604;
+    width: min(30vw, 52dvh, 300px);
+  }
+}
+
+/* a genuinely tiny stage: keep the scene whole and let the lockup be small */
+@media (max-height: 300px) {
+  .intro-brand {
+    width: min(26vw, 46dvh, 240px);
   }
 }
 
